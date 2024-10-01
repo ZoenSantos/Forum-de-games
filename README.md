@@ -8,11 +8,15 @@ terá que fazer um banco de dados com o nome de usuarios e uma tabela chamada us
 <h2>Aplicações que terá que baixar:</h2>
 
 As aplicações que teram que ser baixadas são:
-
+<br>
 mysql2;
+<br>
 body-parser;
+<br>
 ejs;
+<br>
 express;
+<br>
 path
-
+<br>
 Todos sendo baixadas utilizando o node
