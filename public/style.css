@@ -1,0 +1,183 @@
+/* Reset básico para eliminar margens e paddings padrão */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive; /* Fonte temática de games */
+    background-color: #f4f4f4;
+    background: url('smash.png') no-repeat center center fixed;
+    background-size: 98%; /* Cobre toda a tela com o GIF */
+    background-color: #000;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2 {
+    font-family: 'Press Start 2P', cursive; /* Usar a fonte em títulos */
+    font-size: 16px; /* Diminuído o tamanho da fonte dos títulos */
+}
+
+/* Fundo temático para Login e Cadastro */
+body.login-page, body.cadastro-page {
+    background-image: url('coloque-o-link-da-imagem-aqui'); /* Imagem temática de videogame */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Para garantir que ocupe a altura total da tela */
+    padding-top: 80px; /* Espaço extra para evitar sobreposição com o header */
+    color: #fff;
+}
+
+/* Estilo do formulário de Login e Cadastro */
+form {
+    background: rgba(0, 0, 0, 0.75); /* Fundo escuro com transparência */
+    padding: 40px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 100%; /* Responsivo */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    text-align: center;
+    backdrop-filter: blur(10px); /* Efeito de desfoque para um visual moderno */
+}
+
+form h2 {
+    margin-bottom: 20px;
+    font-size: 20px; /* Fonte menor no formulário */
+    color: #4b6cb7;
+}
+
+form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="tel"] {
+    padding: 12px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    font-size: 14px; /* Fonte menor nos inputs */
+    width: 100%;
+    margin-bottom: 20px; /* Mais espaçamento entre os campos */
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+form input::placeholder {
+    color: #ccc;
+}
+
+form button {
+    background: #4b6cb7;
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px; /* Fonte menor no botão */
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+form button:hover {
+    background: #3a4f8e;
+}
+
+form a {
+    color: #4b6cb7;
+    text-decoration: none;
+    font-size: 12px; /* Fonte menor nos links */
+    display: inline-block;
+    margin-top: 15px;
+}
+
+form a:hover {
+    text-decoration: underline;
+}
+
+/* Estilo do header e navegação */
+header {
+    background: linear-gradient(135deg, #4b6cb7, #182848);
+    color: #fff;
+    padding: 10px 0; /* Menor padding no header */
+    text-align: center;
+    position: fixed; /* Fixa o header no topo */
+    top: 0;
+    width: 100%;
+    z-index: 1000; /* Garante que o header fique sempre por cima */
+    font-family: 'Press Start 2P', cursive; /* Fonte temática de games */
+    font-size: 14px; /* Tamanho reduzido para o cabeçalho */
+}
+
+header h1 {
+    font-size: 18px; /* Tamanho reduzido do título */
+}
+
+/* Atualização para posicionar login e cadastro no canto superior direito */
+.auth-buttons {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.auth-buttons a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 10px;
+    font-size: 12px; /* Tamanho reduzido dos links */
+    border-radius: 5px;
+    background-color: #4b6cb7;
+    transition: background 0.3s;
+}
+
+.auth-buttons a:hover {
+    background: #3a4f8e;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 15px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background 0.3s;
+    font-size: 12px; /* Tamanho reduzido dos links de navegação */
+}
+
+nav a:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 100px; /* Garante que o conteúdo não fique sobre o header */
+    flex-grow: 1; /* Faz o main ocupar todo o espaço disponível */
+}
+
+p {
+    margin: 10px 0;
+}
