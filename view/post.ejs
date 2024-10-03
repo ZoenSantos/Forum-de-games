@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Post</title>
+</head>
+<body>
+    <h1>Criar Post</h1>
+    <form action="/post" method="POST">
+        <label for="titulo">Título:</label>
+        <input type="text" id="titulo" name="titulo" required>
+        <br>
+        <label for="conteudo">Conteúdo:</label>
+        <textarea id="conteudo" name="conteudo" rows="5" required></textarea>
+        <br>
+        <button type="submit">Publicar</button>
+    </form>
+    <a href="/dashboardAdmin">Voltar para a página inicial</a>
+</body>
+</html>

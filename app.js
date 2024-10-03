@@ -60,6 +60,26 @@ app.get('/reviews', (req, res) => {
     res.render('reviews', { title: 'Reviews' });
 });
 
+app.get('/dashbordAdmin', (req, res) => {
+    res.render('dashbordAdmin', { title: 'Página após o login para os escritores' });
+});
+
+app.get('/dashbord', (req, res) => {
+    res.render('dashbord', { title: 'Página após o login para os clientes'})
+});
+
+app.get('/post', (req, res) => {
+    res.render('post', { title: 'Tela para escrever as reviews'})
+});
+
+app.get('/reviewEscritor', (req, res) => {
+    res.render('reviewEscritor', {title: 'Tela para redirecionar para a tela de post'})
+});
+
+app.get('/lerReview', (req, res) => {
+    res.render('lerReview', { title: 'Aqui o cliente e escritor poderam ler a review que foi escrita' });
+});
+
 // Rota para processar o cadastro
 app.post('/cadastro', (req, res) => {
     const { nome, email, senha, telefone } = req.body;
@@ -97,12 +117,66 @@ app.post('/login', (req, res) => {
         if (results.length > 0) {
             // Login bem-sucedido
             res.send('Login realizado com sucesso!');
+            res.redirect('/dashboard');
         } else {
             // Credenciais inválidas
             res.send('Email ou senha incorretos!');
         }
     });
 });
+
+app.post('/post', (req, res) => {
+    const { titulo, conteudo } = req.body;
+
+    // Inserindo o post no banco de dados
+    const query = 'INSERT INTO posts (titulo, conteudo) VALUES (?, ?)';
+    db.query(query, [titulo, conteudo], (err, result) => {
+        if (err) {
+            console.error('Erro ao inserir no MySQL:', err);
+            res.status(500).send('Erro ao salvar o post!');
+            return;
+        }
+        res.redirect('/'); // Redireciona para a página inicial ou de posts
+    });
+});
+
+// Rota para exibir um post individual
+app.get('/lerReview/:id', (req, res) => {
+    const { id } = req.params;
+
+    const query = 'SELECT * FROM posts WHERE id = ?'; // Seleciona o post específico pelo ID
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).send('Erro ao carregar o post!');
+            return;
+        }
+
+        if (result.length > 0) {
+            res.render('lerReview', { post: result[0], title: result[0].titulo }); // Passa o post para o template
+        } else {
+            res.status(404).send('Post não encontrado');
+        }
+    });
+});
+
+// Rota para retornar todas as postagens em formato JSON
+app.get('/api/postagens', (req, res) => {
+    const query = 'SELECT * FROM posts';
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).json({ error: 'Erro ao carregar as postagens!' });
+            return;
+        }
+
+        // Retorna as postagens como JSON
+        res.json(results);
+    });
+});
+
+
 
 // Iniciando o servidor
 const port = 3000;
