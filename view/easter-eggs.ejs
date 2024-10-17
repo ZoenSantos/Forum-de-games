@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameGenius - Easter Eggs</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="logo.png" type="image/x-icon">    <!-- Link para a fonte de jogos -->
+    <link rel="icon" href="logo.png" type="image/x-icon"> <!-- Link para a fonte de jogos -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -13,16 +14,19 @@
             background-color: #f4f4f4;
             text-align: center;
         }
+
         header {
             background-color: #333;
             color: white;
             padding: 20px;
         }
+
         nav a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
         }
+
         .auth-buttons a {
             margin-left: 10px;
             color: white;
@@ -34,6 +38,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>Easter Eggs</h1>
@@ -43,15 +48,28 @@
             <a href="/reviews">Reviews</a>
             <a href="/easter-eggs">Easter Eggs</a>
         </nav>
-        <div class="auth-buttons">
-            <a href="/login" class="login">Login</a>
-            <a href="/cadastro" class="cadastro">Cadastro</a>
-        </div>
+        <!-- Verifica se o usuário está logado -->
+        <nav class="auth-buttons">
+            <ul>
+                <% if (user) { %>
+                    <!-- Se o usuário está logado, mostra opções personalizadas -->
+                    <li><a href="/profile">Meu Perfil</a></li>
+                    <li><a href="/">Sair</a></li>
+                    <% } else { %>
+                        <!-- Se o usuário NÃO está logado, mostra "Faça login" e "Cadastre-se" -->
+                        <li><a href="/login">Faça Login</a></li>
+                        <li><a href="/cadastro">Cadastre-se</a></li>
+                    <% } %>
+            </ul>
+        </nav>
     </header>
     <main>
         <h2>Descubra os segredos escondidos nos jogos!</h2>
         <p>Aqui você encontrará uma lista dos melhores easter eggs dos jogos.</p>
-        <p>Confira os melhores momentos no <a href="https://www.youtube.com/watch?v=m2xswMyqgsw&list=PLaV1nMv3TVykN0Es6m23DA1X_3HgNKJLq&pp=iAQB" target="_blank">YouTube</a>.</p>
+        <p>Confira os melhores momentos no <a
+                href="https://www.youtube.com/watch?v=m2xswMyqgsw&list=PLaV1nMv3TVykN0Es6m23DA1X_3HgNKJLq&pp=iAQB"
+                target="_blank">YouTube</a>.</p>
     </main>
 </body>
+
 </html>

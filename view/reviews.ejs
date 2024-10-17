@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,16 +15,19 @@
             background-color: #f4f4f4;
             text-align: center;
         }
+
         header {
             background-color: #333;
             color: white;
             padding: 20px;
         }
+
         nav a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
         }
+
         .auth-buttons a {
             margin-left: 10px;
             color: white;
@@ -35,6 +39,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>Reviews de Jogos</h1>
@@ -44,15 +49,27 @@
             <a href="/reviews">Reviews</a>
             <a href="/easter-eggs">Easter Eggs</a>
         </nav>
-        <div class="auth-buttons"><!--Substituir essa linha por um icone de um círculo com a letra E de Escritor-->
-            <a href="/login" class="login">Login</a>
-            <a href="/cadastro" class="cadastro">Cadastro</a>
-        </div>
+        <!-- Verifica se o usuário está logado -->
+        <nav class="auth-buttons">
+            <ul>
+                <% if (user) { %>
+                    <!-- Se o usuário está logado, mostra opções personalizadas -->
+                    <li><a href="/profile">Meu Perfil</a></li>
+                    <li><a href="/f">Sair</a></li>
+                    <% } else { %>
+                        <!-- Se o usuário NÃO está logado, mostra "Faça login" e "Cadastre-se" -->
+                        <li><a href="/login">Faça Login</a></li>
+                        <li><a href="/cadastro">Cadastre-se</a></li>
+                <% } %>
+            </ul>
+        </nav>
     </header>
     <main>
         <h2>Leia as últimas reviews!</h2>
         <p>Aqui você encontra análises detalhadas sobre os jogos mais recentes.</p>
-        <p>Confira também o vídeo com as melhores análises no <a href="https://www.youtube.com/watch?v=m2xswMyqgsw&list=PLaV1nMv3TVykN0Es6m23DA1X_3HgNKJLq&pp=iAQB" target="_blank">YouTube</a>.</p>
+        <p>Confira também o vídeo com as melhores análises no <a
+                href="https://www.youtube.com/watch?v=m2xswMyqgsw&list=PLaV1nMv3TVykN0Es6m23DA1X_3HgNKJLq&pp=iAQB"
+                target="_blank">YouTube</a>.</p>
         <br>
         <h2>Olá caso queira escrever uma review pode clicar <a href="/post">aqui</a></h2>
         <br>
@@ -60,14 +77,14 @@
         <div class="container">
             <h1>Postagens Recentes</h1>
             <ul id="postagens-list"></ul>
-    
+
             <script>
                 // Faz uma solicitação para a rota API que retorna as postagens
                 fetch('/api/postagens')
                     .then(response => response.json())
                     .then(postagens => {
                         const postagensList = document.getElementById('postagens-list');
-                        
+
                         if (postagens && postagens.length) {
                             postagens.forEach(post => {
                                 const listItem = document.createElement('li');
@@ -87,4 +104,5 @@
         </div>
     </main>
 </body>
+
 </html>

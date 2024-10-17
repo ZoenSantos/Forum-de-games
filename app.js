@@ -4,6 +4,7 @@ const ejs = require('ejs');
 const path = require('path');
 const mysql = require('mysql2');
 const session = require('express-session');
+const checkSession = require('./middlewares/sessionCheck'); // Importando o middleware
 
 const app = express();
 
@@ -181,11 +182,11 @@ app.get('/cadastro', (req, res) => {
 });
 
 app.get('/dicas', (req, res) => {
-    res.render('dicas', { title: 'Dicas' })
+    res.render('dicas', { user: req.session.user });
 });
 
 app.get('/easter-eggs', (req, res) => {
-    res.render('easter-eggs', { title: 'Segredinhos nos games' });
+    res.render('easter-eggs', { user: req.session.user });
 });
 
 app.get('/forgot', (req, res) => {
@@ -193,7 +194,7 @@ app.get('/forgot', (req, res) => {
 });
 
 app.get('/reviews', (req, res) => {
-    res.render('reviews', { title: 'Reviews' });
+    res.render('reviews', { user: req.session.user });
 });
 
 app.get('/dashbordAdmin', (req, res) => {
@@ -219,9 +220,23 @@ app.get('/post', (req, res) => {
 });
 
 app.get('/reviewEscritor', (req, res) => {
-    res.render('reviewEscritor', { title: 'Tela para redirecionar para a tela de post' })
+    res.render('reviewEscritor', { user: req.session.user });
 });
 
 app.get('/lerReview', (req, res) => {
-    res.render('lerReview', { post: null, title: 'Nenhuma review selecionada' });
+    res.render('lerReview', { user: req.session.user });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
