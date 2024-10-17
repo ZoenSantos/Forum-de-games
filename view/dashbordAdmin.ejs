@@ -13,15 +13,29 @@
     <header>
         <h1>🕹️ Bem-vindo ao GameGenius!</h1>
         <nav>
-            <a href="/">Início</a>
+            <a href="/dashbordAdmin">Início</a>
             <a href="/dicas">Dicas</a>
             <a href="/reviews">Reviews</a>
             <a href="/easter-eggs">Easter Eggs</a>
         </nav>
-        <div class="auth-buttons"> <!--Substituir essa linha por um icone de um círculo com a letra E de Escritor ou A de admin-->
-            <a href="/login" class="login">Login</a>
-            <a href="/cadastro" class="cadastro">Cadastro</a>
-        </div>
+        <!-- Verifica se o usuário está logado -->
+        <nav class="auth-buttons">
+            <ul>
+                <% if (user) { %>
+                    <!-- Se o usuário está logado, mostra opções personalizadas -->
+                    <li><a href="/profile">Meu Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                <% } else { %>
+                    <!-- Se o usuário NÃO está logado, mostra "Faça login" e "Cadastre-se" -->
+                    <li><a href="/login">Faça Login</a></li>
+                    <li><a href="/cadastro">Cadastre-se</a></li>
+                <% } %>
+            </ul>
+        </nav>
+
+        <!--<div class="auth-buttons"> Substituir essa linha por um icone de um círculo com a letra E de Escritor ou A de admin
+            <img src="iconeA.png">
+        </div>-->
     </header>
     <main>
         <h2>Explore o mundo dos jogos!</h2>

@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const path = require('path');
 const mysql = require('mysql2');
+const session = require('express-session');
 
 const app = express();
 
@@ -30,97 +31,77 @@ db.connect((err) => {
     console.log('Conectado ao MySQL!');
 });
 
-// Rota para a página inicial
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Página Inicial' });
-});
+// Configuração da sessão
+app.use(session({
+    secret: 'minha-chave-super-secreta-para-sessoes-123!@#', //Basicamente isso é cookies
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Defina como true se estiver usando HTTPS
+}));
 
-app.get('/login', (req, res) => {
-    res.render('login', { title: 'Página Login' });
-});
-
-// Rota para a página de cadastro
-app.get('/cadastro', (req, res) => {
-    res.render('cadastro', { title: 'Cadastro' });
-});
-
-app.get('/dicas', (req, res) => {
-    res.render('dicas', {title: 'Dicas' })
-});
-
-app.get('/easter-eggs', (req, res) => {
-    res.render('easter-eggs', { title: 'Segredinhos nos games' });
-});
-
-app.get('/forgot', (req, res) => {
-    res.render('forgot', { title: 'Esqueci a senha' });
-});
-
-app.get('/reviews', (req, res) => {
-    res.render('reviews', { title: 'Reviews' });
-});
-
-app.get('/dashbordAdmin', (req, res) => {
-    res.render('dashbordAdmin', { title: 'Página após o login para os escritores' });
-});
-
-app.get('/dashbord', (req, res) => {
-    res.render('dashbord', { title: 'Página após o login para os clientes'})
-});
-
-app.get('/post', (req, res) => {
-    res.render('post', { title: 'Tela para escrever as reviews'})
-});
-
-app.get('/reviewEscritor', (req, res) => {
-    res.render('reviewEscritor', {title: 'Tela para redirecionar para a tela de post'})
-});
-
-app.get('/lerReview', (req, res) => {
-    res.render('lerReview', { title: 'Aqui o cliente e escritor poderam ler a review que foi escrita' });
-});
 
 // Rota para processar o cadastro
 app.post('/cadastro', (req, res) => {
-    const { nome, email, senha, telefone } = req.body;
+    const { nome, email, telefone, senha } = req.body;
+    // Query para inserir os dados do usuário no banco de dados
+    const query = 'INSERT INTO users (nome, email, telefone, senha) VALUES (?, ?, ?, ?)';
 
-    // Inserindo os dados no banco de dados
-    const query = 'INSERT INTO users (nome, email, senha, telefone) VALUES (?, ?, ?, ?)';
-    db.query(query, [nome, email, senha, telefone], (err, results) => {
+    // Inserindo os dados no banco de dados, incluindo o campo 'role'
+    db.query(query, [nome, email, telefone, senha], (err, result) => {
         if (err) {
             console.error('Erro ao inserir no MySQL:', err);
-            res.status(500).send('Erro ao cadastrar!');
-            return;
+            return res.status(500).send('Erro ao cadastrar usuário');
         }
-        res.send('Cadastro realizado com sucesso!');
+
+        // Redireciona o usuário ou envia uma resposta de sucesso
+        res.status(200).send('Cadastro realizado com sucesso!');
     });
 });
 
-// Rota para a página de login
-app.get('/login', (req, res) => {
-    res.render('login', { title: 'Login' });
-});
 
 // Rota para processar o login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
 
-    // Verifica se o usuário existe no banco de dados
+    // Verifica se o email e senha foram fornecidos
+    if (!email || !senha) {
+        return res.status(400).send('Email e senha são obrigatórios');
+    }
+
+    // Query para verificar o login do usuário
     const query = 'SELECT * FROM users WHERE email = ? AND senha = ?';
+    
     db.query(query, [email, senha], (err, results) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
-            res.status(500).send('Erro no servidor!');
-            return;
+            return res.status(500).send('Erro no servidor!');
+        }
+
+        // Se nenhum usuário for encontrado, retorna erro
+        if (results.length === 0) {
+            return res.status(401).send('Email ou senha inválidos');
         }
 
         if (results.length > 0) {
-            // Login bem-sucedido
-            res.send('Login realizado com sucesso!');
-            res.redirect('/dashboard');
+            const user = results[0];
+            
+            // Criando a sessão com os dados do usuário
+            req.session.user = {
+                id: user.id,
+                nome: user.nome,
+                role: user.role
+            };
+        }
+        // Usuário encontrado
+        const user = results[0]; // Obtém o primeiro (e único) resultado
+
+        // Redireciona de acordo com o papel (role) do usuário
+        if (user.role === 'escritor') {
+            return res.redirect('/dashbord'); // Escritores vão para o dashboard de escritores
+        } else if (user.role === 'admin') {
+            return res.redirect('/dashbordAdmin'); // Admins vão para o dashboard admin
         } else {
-            // Credenciais inválidas
-            res.send('Email ou senha incorretos!');
+            return res.status(403).send('Acesso negado! Role inválido.');
         }
     });
 });
@@ -140,11 +121,11 @@ app.post('/post', (req, res) => {
     });
 });
 
-// Rota para exibir um post individual
+// Rota para exibir um post individual no lerReview.ejs
 app.get('/lerReview/:id', (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // Pegando o ID do post na URL
 
-    const query = 'SELECT * FROM posts WHERE id = ?'; // Seleciona o post específico pelo ID
+    const query = 'SELECT * FROM posts WHERE id = ?'; // Buscando o post pelo ID no banco de dados
     db.query(query, [id], (err, result) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
@@ -153,17 +134,20 @@ app.get('/lerReview/:id', (req, res) => {
         }
 
         if (result.length > 0) {
-            res.render('lerReview', { post: result[0], title: result[0].titulo }); // Passa o post para o template
+            // Se o post for encontrado, renderizamos o template e passamos os dados do post
+            res.render('lerReview', { post: result[0] }); // Passa o post encontrado para o EJS
         } else {
-            res.status(404).send('Post não encontrado');
+            // Se o post não for encontrado, renderizamos o template com post = null
+            res.render('lerReview', { post: null });
         }
     });
 });
 
+
 // Rota para retornar todas as postagens em formato JSON
 app.get('/api/postagens', (req, res) => {
     const query = 'SELECT * FROM posts';
-    
+
     db.query(query, (err, results) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
@@ -176,10 +160,68 @@ app.get('/api/postagens', (req, res) => {
     });
 });
 
-
-
 // Iniciando o servidor
 const port = 3000;
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
+});
+
+// Rota para a página inicial
+app.get('/', (req, res) => {
+    res.render('index', { title: 'Página Inicial' });
+});
+
+app.get('/login', (req, res) => {
+    res.render('login', { title: 'Página Login' });
+});
+
+// Rota para a página de cadastro
+app.get('/cadastro', (req, res) => {
+    res.render('cadastro', { title: 'Cadastro' });
+});
+
+app.get('/dicas', (req, res) => {
+    res.render('dicas', { title: 'Dicas' })
+});
+
+app.get('/easter-eggs', (req, res) => {
+    res.render('easter-eggs', { title: 'Segredinhos nos games' });
+});
+
+app.get('/forgot', (req, res) => {
+    res.render('forgot', { title: 'Esqueci a senha' });
+});
+
+app.get('/reviews', (req, res) => {
+    res.render('reviews', { title: 'Reviews' });
+});
+
+app.get('/dashbordAdmin', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Renderiza o dashboard para administradores
+    res.render('dashbordAdmin', { user: req.session.user });
+});
+
+app.get('/dashbord', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'escritor') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Renderiza o dashboard para escritores
+    res.render('dashbord', { user: req.session.user });
+});
+
+app.get('/post', (req, res) => {
+    res.render('post', { title: 'Tela para escrever as reviews' })
+});
+
+app.get('/reviewEscritor', (req, res) => {
+    res.render('reviewEscritor', { title: 'Tela para redirecionar para a tela de post' })
+});
+
+app.get('/lerReview', (req, res) => {
+    res.render('lerReview', { post: null, title: 'Nenhuma review selecionada' });
 });
