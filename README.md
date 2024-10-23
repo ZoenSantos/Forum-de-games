@@ -22,6 +22,8 @@ express;
 <br>
 path
 <br>
+multer
+<br>
 <br>
 Todos sendo baixadas utilizando o node
 <br>
