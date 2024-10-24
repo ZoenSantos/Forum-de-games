@@ -54,3 +54,4 @@ titulo(titulo VARCHAR(255) NOT NULL)
 <br>
 conteudo(conteudo TEXT NOT NULL)
 <br>
+profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
