@@ -4,6 +4,7 @@ const ejs = require('ejs');
 const path = require('path');
 const mysql = require('mysql2');
 const session = require('express-session');
+const multer = require('multer');
 const checkSession = require('./middlewares/sessionCheck'); // Importando o middleware
 
 const app = express();
@@ -12,6 +13,33 @@ const app = express();
 app.set('views', path.join(__dirname, 'view'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
+
+// Configurar armazenamento do multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage });
+
+app.use(express.urlencoded({ extended: true }));
+
+// Rota de atualização de perfil
+app.post('/profile', upload.single('profilePicture'), (req, res) => {
+    const { username } = req.body;
+    const profilePicture = req.file ? req.file.filename : null;
+
+    // Código para salvar as mudanças (username e profilePicture) no banco de dados
+
+    res.redirect('/profile');
+});
+
+// Servir arquivos estáticos
+app.use('/uploads', express.static('uploads'));
 
 // Middleware para analisar o corpo das requisições
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,7 +68,6 @@ app.use(session({
     cookie: { secure: false } // Defina como true se estiver usando HTTPS
 }));
 
-
 // Rota para processar o cadastro
 app.post('/cadastro', (req, res) => {
     const { nome, email, telefone, senha } = req.body;
@@ -59,7 +86,6 @@ app.post('/cadastro', (req, res) => {
     });
 });
 
-
 // Rota para processar o login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
@@ -71,7 +97,7 @@ app.post('/login', (req, res) => {
 
     // Query para verificar o login do usuário
     const query = 'SELECT * FROM users WHERE email = ? AND senha = ?';
-    
+
     db.query(query, [email, senha], (err, results) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
@@ -85,7 +111,7 @@ app.post('/login', (req, res) => {
 
         if (results.length > 0) {
             const user = results[0];
-            
+
             // Criando a sessão com os dados do usuário
             req.session.user = {
                 id: user.id,
@@ -97,7 +123,7 @@ app.post('/login', (req, res) => {
         const user = results[0]; // Obtém o primeiro (e único) resultado
 
         // Redireciona de acordo com o papel (role) do usuário
-        if (user.role === 'escritor') {
+        if (user.role === 'usuario') {
             return res.redirect('/dashbord'); // Escritores vão para o dashboard de escritores
         } else if (user.role === 'admin') {
             return res.redirect('/dashbordAdmin'); // Admins vão para o dashboard admin
@@ -144,7 +170,6 @@ app.get('/lerReview/:id', (req, res) => {
     });
 });
 
-
 // Rota para retornar todas as postagens em formato JSON
 app.get('/api/postagens', (req, res) => {
     const query = 'SELECT * FROM posts';
@@ -158,6 +183,26 @@ app.get('/api/postagens', (req, res) => {
 
         // Retorna as postagens como JSON
         res.json(results);
+    });
+});
+
+// Rota para atualização de perfil
+app.post('/profile', upload.single('profileImage'), (req, res) => {
+    const { username } = req.body;
+    const profileImage = req.file ? req.file.filename : 'default-avatar.png'; // Use a imagem padrão se nenhuma for enviada
+
+    // Atualizar os dados do usuário no banco de dados
+    const query = 'UPDATE users SET nome = ?, profile_image = ? WHERE id = ?';
+    db.query(query, [username, profileImage, req.session.user.id], (err, result) => {
+        if (err) {
+            console.error('Erro ao atualizar dados do usuário no MySQL:', err);
+            return res.status(500).send('Erro ao atualizar perfil do usuário');
+        }
+        // Atualiza a sessão com os novos dados
+        req.session.user.nome = username;
+        req.session.user.profile_image = profileImage;
+
+        res.redirect('/dashbord');
     });
 });
 
@@ -207,15 +252,19 @@ app.get('/dashbordAdmin', (req, res) => {
 });
 
 app.get('/dashbord', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'escritor') {
-        return res.status(403).send('Acesso negado!');
-    }
+    //if (!req.session.user || req.session.user.role !== 'escritor') {
+    //return res.status(403).send('Acesso negado!');
+    //}
 
     // Renderiza o dashboard para escritores
     res.render('dashbord', { user: req.session.user });
 });
 
 app.get('/post', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'escritor') {
+        return res.status(403).send('Acesso negado! Faça o login primeiro');
+    }
+
     res.render('post', { title: 'Tela para escrever as reviews' })
 });
 
@@ -227,16 +276,21 @@ app.get('/lerReview', (req, res) => {
     res.render('lerReview', { user: req.session.user });
 });
 
+app.get('/profile', (req, res) => {
+    res.render('profile', { user: req.session.user });
+});
 
+app.get('/profile', (req, res) => {
+    const userId = req.session.user.id;
 
-
-
-
-
-
-
-
-
-
-
+    // Trocar "connection.query" por "db.query"
+    db.query('SELECT nome, role, profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            return res.status(500).send('Erro ao buscar dados do usuário');
+        }
+    
+        const user = results[0];
+        res.render('profile', { user: req.session.user });
+    });    
+});
 
