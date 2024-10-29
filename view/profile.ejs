@@ -107,18 +107,19 @@
             <!-- Nome de Usuário -->
             <div class="form-group">
                 <label for="userName">Nome de Usuário</label>
-                <input type="text" id="userName" name="username" class="form-control" value="<%= user.nome %>"
-                    placeholder="Insira o nome de usuário">
-            </div>
-            <!-- Status -->
-            <div class="form-group">
-                <label for="userRole">Status</label>
-                <input type="text" id="userRole" class="form-control" value="<%= user.role %>" readonly>
+                <input type="text" id="userName" name="username" class="form-control" value="<%= user.nome %>" placeholder="Insira o nome de usuário">
             </div>
             <!-- Botão de Salvar -->
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
         </form>
     </div>
+
+    <script>
+        function previewProfilePicture(event) {
+            const image = document.getElementById('imgPreview');
+            image.src = URL.createObjectURL(event.target.files[0]);
+        }
+    </script>
 </body>
 
 </html>

@@ -28,16 +28,6 @@ const upload = multer({ storage });
 
 app.use(express.urlencoded({ extended: true }));
 
-// Rota de atualização de perfil
-app.post('/profile', upload.single('profilePicture'), (req, res) => {
-    const { username } = req.body;
-    const profilePicture = req.file ? req.file.filename : null;
-
-    // Código para salvar as mudanças (username e profilePicture) no banco de dados
-
-    res.redirect('/profile');
-});
-
 // Servir arquivos estáticos
 app.use('/uploads', express.static('uploads'));
 
@@ -133,18 +123,22 @@ app.post('/login', (req, res) => {
     });
 });
 
-app.post('/post', (req, res) => {
-    const { titulo, conteudo } = req.body;
+app.post('/profile', upload.single('profileImage'), (req, res) => {
+    const { username } = req.body;
+    const profileImage = req.file ? req.file.filename : req.session.user.profile_image;
 
-    // Inserindo o post no banco de dados
-    const query = 'INSERT INTO posts (titulo, conteudo) VALUES (?, ?)';
-    db.query(query, [titulo, conteudo], (err, result) => {
+    const query = 'UPDATE users SET nome = ?, profile_image = ? WHERE id = ?';
+    db.query(query, [username, profileImage, req.session.user.id], (err, result) => {
         if (err) {
-            console.error('Erro ao inserir no MySQL:', err);
-            res.status(500).send('Erro ao salvar o post!');
-            return;
+            console.error('Erro ao atualizar dados do usuário no MySQL:', err);
+            return res.status(500).send('Erro ao atualizar perfil do usuário');
         }
-        res.redirect('/'); // Redireciona para a página inicial ou de posts
+
+        // Atualiza a sessão com os novos dados
+        req.session.user.nome = username;
+        req.session.user.profile_image = profileImage;
+
+        res.redirect('/profile');
     });
 });
 
@@ -189,20 +183,20 @@ app.get('/api/postagens', (req, res) => {
 // Rota para atualização de perfil
 app.post('/profile', upload.single('profileImage'), (req, res) => {
     const { username } = req.body;
-    const profileImage = req.file ? req.file.filename : 'default-avatar.png'; // Use a imagem padrão se nenhuma for enviada
+    const profileImage = req.file ? req.file.filename : req.session.user.profile_image;
 
-    // Atualizar os dados do usuário no banco de dados
     const query = 'UPDATE users SET nome = ?, profile_image = ? WHERE id = ?';
     db.query(query, [username, profileImage, req.session.user.id], (err, result) => {
         if (err) {
             console.error('Erro ao atualizar dados do usuário no MySQL:', err);
             return res.status(500).send('Erro ao atualizar perfil do usuário');
         }
-        // Atualiza a sessão com os novos dados
+
+        // Atualiza a sessão com os novos dados após o update no banco
         req.session.user.nome = username;
         req.session.user.profile_image = profileImage;
 
-        res.redirect('/dashbord');
+        res.redirect('/profile'); // Redireciona para a rota GET de /profile
     });
 });
 
@@ -243,22 +237,49 @@ app.get('/reviews', (req, res) => {
 });
 
 app.get('/dashbordAdmin', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Acesso negado!');
+    //if (!req.session.user || req.session.user.role !== 'admin') {
+       //return res.status(403).send('Acesso negado!');
+    //}
+    if (!req.session.user) {
+        return res.redirect('/login'); // Redireciona para o login se não estiver logado
     }
+    const userId = req.session.user.id;
+    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar imagem de perfil:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
+        // Atualiza a sessão com a imagem de perfil
+        req.session.user.profile_image = profileImage;
+        // Renderiza o dashboard com a imagem de perfil
+    });
 
     // Renderiza o dashboard para administradores
     res.render('dashbordAdmin', { user: req.session.user });
 });
 
 app.get('/dashbord', (req, res) => {
-    //if (!req.session.user || req.session.user.role !== 'escritor') {
-    //return res.status(403).send('Acesso negado!');
-    //}
-
-    // Renderiza o dashboard para escritores
-    res.render('dashbord', { user: req.session.user });
+    if (!req.session.user) {
+        return res.redirect('/login'); // Redireciona para o login se não estiver logado
+    }
+    
+    const userId = req.session.user.id;
+    
+    // Consulta para obter a imagem de perfil do usuário
+    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar imagem de perfil:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
+        // Atualiza a sessão com a imagem de perfil
+        req.session.user.profile_image = profileImage;
+        // Renderiza o dashboard com a imagem de perfil
+        res.render('dashbord', { user: req.session.user });
+    });
 });
+
 
 app.get('/post', (req, res) => {
     if (!req.session.user || req.session.user.role !== 'escritor') {
@@ -277,20 +298,17 @@ app.get('/lerReview', (req, res) => {
 });
 
 app.get('/profile', (req, res) => {
-    res.render('profile', { user: req.session.user });
-});
-
-app.get('/profile', (req, res) => {
     const userId = req.session.user.id;
 
-    // Trocar "connection.query" por "db.query"
     db.query('SELECT nome, role, profile_image FROM users WHERE id = ?', [userId], (err, results) => {
         if (err) {
             return res.status(500).send('Erro ao buscar dados do usuário');
         }
-    
+
         const user = results[0];
-        res.render('profile', { user: req.session.user });
-    });    
+        res.render('profile', { user });
+    });
 });
+
+
 

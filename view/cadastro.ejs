@@ -9,7 +9,7 @@
 <body>
     <div class="register-container">
         <h2>Cadastro</h2>
-        <form action="/cadastro" method="POST">
+        <form id="registerForm" action="/cadastro" method="POST">
             <label for="nome">Nome:</label>
             <input type="text" id="nome" name="nome" required>
             <br>
@@ -32,6 +32,22 @@
             <a href="/">Voltar</a>
         </form>
         <br>
+        <p id="error-message" style="color: red;"></p>
     </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            const senha = document.getElementById('senha').value;
+            const confirmarSenha = document.getElementById('confirmar-senha').value;
+            const errorMessage = document.getElementById('error-message');
+
+            if (senha !== confirmarSenha) {
+                event.preventDefault();
+                errorMessage.textContent = "As senhas não coincidem!";
+            } else {
+                errorMessage.textContent = "";
+            }
+        });
+    </script>
 </body>
 </html>

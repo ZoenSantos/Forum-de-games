@@ -37,10 +37,16 @@
         <!--<div class="auth-buttons"> 
             <img src="iconeE.png">
         </div>-->
+
     </header>
     <main>
         <h2>Explore o mundo dos jogos!</h2>
         <p>Aqui você encontra dicas, reviews e segredos para se tornar um verdadeiro gênio dos games!</p>
+     
+        <div class="profile-section">
+            <img src="/uploads/<%= user.profile_image %>" alt="Imagem de Perfil" class="profile-image">
+            <p>Bem-vindo, <%= user.nome %>!</p>
+        </div>
     </main>
 </body>
 
