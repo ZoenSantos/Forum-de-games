@@ -43,7 +43,7 @@ senha(Varchar 250)
 <br>
 telefone (Varchar 15)
 <br>
-role(role ENUM('cliente', 'escritor') NOT NULL DEFAULT 'cliente';)
+role(role ENUM('usuario', 'escritor') NOT NULL DEFAULT 'usuario';)
 <br>
 <br>
 <h3>Agora a outra tabela tem o nome de posts e nela contêm as seguintes colunas:</h3>
@@ -55,3 +55,7 @@ titulo(titulo VARCHAR(255) NOT NULL)
 conteudo(conteudo TEXT NOT NULL)
 <br>
 profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
+<br>
+<br>
+<h3>Outra tabela que o senhor irá precisar para o sistema de post poder funcionar:</h3>
+<br>
