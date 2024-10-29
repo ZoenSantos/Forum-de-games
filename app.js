@@ -72,7 +72,7 @@ app.post('/cadastro', (req, res) => {
         }
 
         // Redireciona o usuário ou envia uma resposta de sucesso
-        res.status(200).send('Cadastro realizado com sucesso!');
+        res.redirect('/cadastrosucesso');
     });
 });
 
@@ -295,6 +295,10 @@ app.get('/reviewEscritor', (req, res) => {
 
 app.get('/lerReview', (req, res) => {
     res.render('lerReview', { user: req.session.user });
+});
+
+app.get('/cadastrosucesso', (req, res) => {
+    res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
 });
 
 app.get('/profile', (req, res) => {
