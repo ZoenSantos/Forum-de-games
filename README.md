@@ -57,7 +57,7 @@ CREATE TABLE users (
     senha VARCHAR(200) NOT NULL,
     telefone VARCHAR(15),
     role ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario',
-    profile_image VARCHAR(255)
+    profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
   );
 <h3>Agora a outra tabela tem o nome de posts e nela contêm as seguintes colunas:</h3>
 <br>
