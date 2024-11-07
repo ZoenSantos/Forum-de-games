@@ -47,6 +47,16 @@ role(role ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario';)
 <br>
 profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
 <br>
+<br>
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    email VARCHAR(180) UNIQUE NOT NULL,
+    senha VARCHAR(200) NOT NULL,
+    telefone VARCHAR(15),
+    role ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario',
+    profile_image VARCHAR(255)
+  );
 <h3>Agora a outra tabela tem o nome de posts e nela contêm as seguintes colunas:</h3>
 <br>
 id(id INT AUTO_INCREMENT PRIMARY KEY)
