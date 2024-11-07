@@ -73,3 +73,10 @@ CREATE TABLE posts (
     titulo VARCHAR(255) NOT NULL,
     conteudo TEXT NOT NULL
 );
+<br>
+<br>
+<h2>PARA FAZER O SISTEMA FUNCIONA:</h2>
+<br>
+Para fazer esse sistema funcionar primeiramente seria necessário que o você tenha um nodejs baixado no seu computador após isso seria necessario que o senhoria ative o nodejs.
+<br>
+Após a ativação do nodejs será necessário que use "node app.js" após usar isso você poderá ver o site funfando em sua frente.
