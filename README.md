@@ -45,7 +45,7 @@ senha(Varchar 250)
 <br>
 telefone (Varchar 15)
 <br>
-role(role ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario';)
+role(role ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario')
 <br>
 profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
 <br>
