@@ -65,4 +65,9 @@ titulo(titulo VARCHAR(255) NOT NULL)
 <br>
 conteudo(conteudo TEXT NOT NULL)
 <br>
-
+<br>
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    conteudo TEXT NOT NULL
+);
