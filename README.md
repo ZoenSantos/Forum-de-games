@@ -12,17 +12,17 @@ terá que fazer um banco de dados com o nome de usuarios e uma tabela chamada us
 As aplicações que teram que ser baixadas são:
 <br>
 <br>
-mysql2;
+mysql2,
 <br>
-body-parser;
+body-parser,
 <br>
-ejs;
+ejs,
 <br>
-express;
+express,
 <br>
-express-session
+express-session,
 <br>
-path
+path,
 <br>
 multer
 <br>
