@@ -6,8 +6,23 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const multer = require('multer');
 const checkSession = require('./middlewares/sessionCheck'); // Importando o middleware
+const router = express.Router();
 
 const app = express();
+
+// Configuração da sessão
+app.use(session({
+    secret: 'minha-chave-super-secreta-para-sessoes-123!@#', //Basicamente isso é cookies
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Defina como true se estiver usando HTTPS
+}));
+
+// Iniciando o servidor
+const port = 3000;
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});
 
 // Configurando o motor de visualização EJS
 app.set('views', path.join(__dirname, 'view'));
@@ -50,28 +65,36 @@ db.connect((err) => {
     console.log('Conectado ao MySQL!');
 });
 
-// Configuração da sessão
-app.use(session({
-    secret: 'minha-chave-super-secreta-para-sessoes-123!@#', //Basicamente isso é cookies
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Defina como true se estiver usando HTTPS
-}));
-
 // Rota para processar o cadastro
 app.post('/cadastro', (req, res) => {
     const { nome, email, telefone, senha } = req.body;
     // Query para inserir os dados do usuário no banco de dados
-    const query = 'INSERT INTO users (nome, email, telefone, senha) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO users (nome, email, telefone, senha) VALUES (?, ?, ?, ?)';
 
     // Inserindo os dados no banco de dados, incluindo o campo 'role'
-    db.query(query, [nome, email, telefone, senha], (err, result) => {
+    db.query(sql, [nome, email, telefone, senha], (err, results) => {
         if (err) {
-            console.error('Erro ao inserir no MySQL:', err);
-            return res.status(500).send('Erro ao cadastrar usuário');
+            // Verifica se o erro é de duplicidade
+            if (err.code === 'ER_DUP_ENTRY') {
+                // Identifica se foi o email ou telefone duplicado
+                let errorMessage;
+                if (err.message.includes('email')) {
+                    errorMessage = 'Algum dado já foi registrado';
+                } else if (err.message.includes('telefone')) {
+                    errorMessage = 'Algum dado já foi registrado';
+                } else {
+                    errorMessage = 'Erro de duplicidade. Verifique seus dados.';
+                }
+
+                // Envia a mensagem de erro para a página de cadastro
+                return res.render('cadastro', { error: errorMessage });
+            } else {
+                console.error('Erro ao realizar cadastro:', err);
+                return res.status(500).send('Erro no servidor');
+            }
         }
 
-        // Redireciona o usuário ou envia uma resposta de sucesso
+        // Redireciona ou exibe uma mensagem de sucesso após o cadastro
         res.redirect('/cadastrosucesso');
     });
 });
@@ -120,6 +143,25 @@ app.post('/login', (req, res) => {
         } else {
             return res.status(403).send('Acesso negado! Role inválido.');
         }
+    });
+});
+
+// Rota para deletar um post pelo ID - Apenas para admin
+app.post('/deletarPost/:id', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado! Apenas administradores podem deletar posts.');
+    }
+
+    const postId = req.params.id;
+    const query = 'DELETE FROM posts WHERE id = ?';
+
+    db.query(query, [postId], (err, result) => {
+        if (err) {
+            console.error('Erro ao deletar post no MySQL:', err);
+            return res.status(500).send('Erro ao deletar o post!');
+        }
+
+        res.redirect('/dashbordAdmin'); // Redireciona para o dashboard admin após deletar
     });
 });
 
@@ -200,12 +242,6 @@ app.post('/profile', upload.single('profileImage'), (req, res) => {
     });
 });
 
-// Iniciando o servidor
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
-});
-
 // Rota para a página inicial
 app.get('/', (req, res) => {
     res.render('index', { title: 'Página Inicial' });
@@ -237,27 +273,29 @@ app.get('/reviews', (req, res) => {
 });
 
 app.get('/dashbordAdmin', (req, res) => {
-    //if (!req.session.user || req.session.user.role !== 'admin') {
-       //return res.status(403).send('Acesso negado!');
-    //}
-    if (!req.session.user) {
-        return res.redirect('/login'); // Redireciona para o login se não estiver logado
+    // Certifique-se de que o usuário está autenticado e é um admin
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
     }
-    const userId = req.session.user.id;
-    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+
+    // Consulta para buscar todos os usuários do banco de dados
+    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
         if (err) {
-            console.error('Erro ao buscar imagem de perfil:', err);
+            console.error('Erro ao buscar usuários:', err);
             return res.status(500).send('Erro ao carregar o dashboard');
         }
-        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
-        // Atualiza a sessão com a imagem de perfil
-        req.session.user.profile_image = profileImage;
-        // Renderiza o dashboard com a imagem de perfil
-    });
 
-    // Renderiza o dashboard para administradores
-    res.render('dashbordAdmin', { user: req.session.user });
+        // Certifique-se de que "results" está definido e contém os dados de usuários
+        if (!results || results.length === 0) {
+            console.warn('Nenhum usuário encontrado.');
+        }
+
+        // Renderiza o dashboard passando a lista de usuários e o usuário atual
+        res.render('dashbordAdmin', { user: req.session.user, users: results });
+        console.log(results);
+    });
 });
+
 
 app.get('/dashbord', (req, res) => {
     if (!req.session.user) {
