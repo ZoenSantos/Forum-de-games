@@ -244,6 +244,11 @@ app.post('/profile', upload.single('profileImage'), (req, res) => {
 
 // Rota para a página inicial
 app.get('/', (req, res) => {
+    if (req.session && req.session.user) {
+        // Se o usuário está logado, redireciona para o dashboard
+        return res.redirect('/dashbord');
+    }
+
     res.render('index', { title: 'Página Inicial' });
 });
 
@@ -297,7 +302,7 @@ app.get('/dashbordAdmin', (req, res) => {
 });
 
 
-app.get('/dashbord', (req, res) => {
+app.get('/dashbord', checkSession, (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login'); // Redireciona para o login se não estiver logado
     }
@@ -319,8 +324,8 @@ app.get('/dashbord', (req, res) => {
 });
 
 
-app.get('/post', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'escritor') {
+app.get('/post', checkSession, (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'usuario') {
         return res.status(403).send('Acesso negado! Faça o login primeiro');
     }
 
