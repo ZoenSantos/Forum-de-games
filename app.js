@@ -303,10 +303,6 @@ app.get('/dashbordAdmin', (req, res) => {
 
 
 app.get('/dashbord', checkSession, (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login'); // Redireciona para o login se não estiver logado
-    }
-    
     const userId = req.session.user.id;
     
     // Consulta para obter a imagem de perfil do usuário
@@ -321,16 +317,31 @@ app.get('/dashbord', checkSession, (req, res) => {
         // Renderiza o dashboard com a imagem de perfil
         res.render('dashbord', { user: req.session.user });
     });
+
+    if (req.session.user) {
+        if (req.session.user.role === 'admin') {
+            // Se o usuário for admin, redireciona para o dashbordAdmin
+            return res.redirect('/dashbordAdmin');
+        } else if (req.session.user.role === 'usuario') {
+            // Se o usuário for apenas um 'usuario', renderiza o dashboard normal
+            return res.render('dashbord', { title: 'Dashboard do Usuário' });
+        }
+    }
+    // Caso contrário, redireciona para a página de login (caso alguém chegue até aqui sem estar logado)
+    return res.redirect('/login');
 });
 
 
 app.get('/post', checkSession, (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'usuario') {
+    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
+    if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
         return res.status(403).send('Acesso negado! Faça o login primeiro');
     }
 
-    res.render('post', { title: 'Tela para escrever as reviews' })
+    // Se a verificação passou, renderiza a página 'post'
+    res.render('post', { title: 'Tela para escrever as reviews' });
 });
+
 
 app.get('/reviewEscritor', (req, res) => {
     res.render('reviewEscritor', { user: req.session.user });
