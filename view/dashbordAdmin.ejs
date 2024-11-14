@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,14 +24,14 @@
                 <% if (user) { %>
                     <li><a href="/profile">Meu Perfil</a></li>
                     <li><a href="/logout">Sair</a></li>
-                <% } else { %>
-                    <li><a href="/login">Faça Login</a></li>
-                    <li><a href="/cadastro">Cadastre-se</a></li>
-                <% } %>
+                    <% } else { %>
+                        <li><a href="/login">Faça Login</a></li>
+                        <li><a href="/cadastro">Cadastre-se</a></li>
+                        <% } %>
             </ul>
         </nav>
     </header>
-    
+
     <main>
         <h2>Explore o mundo dos jogos!</h2>
         <p>Aqui você encontra dicas, reviews e segredos para se tornar um verdadeiro gênio dos games!</p>
@@ -43,7 +44,7 @@
         <!-- Seção específica para recursos de administração -->
         <section class="admin-section">
             <h3>Área de Administração</h3>
-            
+
             <!-- Gerenciamento de Usuários -->
             <div class="user-management">
                 <h4>Gerenciamento de Usuários</h4>
@@ -60,21 +61,52 @@
                     </thead>
                     <tbody>
                         <!-- Lista de usuários. Suponha que o controller passe um array de usuários -->
-                        <% users.forEach(user => { %>
+                        <% users.forEach(user=> { %>
                             <tr>
-                                <td><%= user.id %></td>
-                                <td><%= user.nome %></td>
-                                <td><%= user.email %></td>
-                                <td><%= user.role %></td>
                                 <td>
-                                    <a href="/admin/editar-usuario/<%= user.id %>">Editar</a> |
-                                    <a href="/admin/deletar-usuario/<%= user.id %>" onclick="return confirm('Tem certeza que deseja remover este usuário?')">Remover</a>
+                                    <%= user.id %>
+                                </td>
+                                <td>
+                                    <%= user.nome %>
+                                </td>
+                                <td>
+                                    <%= user.email %>
+                                </td>
+                                <td>
+                                    <%= user.role %>
+                                </td>
+                                <td>
+                                    <a href="#" data-id="<%= user.id %>" data-nome="<%= user.nome %>"
+                                        data-email="<%= user.email %>" data-role="<%= user.role %>"
+                                        onclick="abrirModal(this)">Editar</a> |
+                                    <a href="/admin/deletar-usuario/<%= user.id %>"
+                                        onclick="return confirm('Tem certeza que deseja remover este usuário?')">Remover</a>
                                 </td>
                             </tr>
-                        <% }) %>
+                            <% }) %>
                     </tbody>
                 </table>
             </div>
+            <div id="modal-editar-usuario" style="display: none;">
+                <div class="modal-content">
+                    <h2>Editar Usuário</h2>
+                    <form action="/admin/editar-usuario" method="POST">
+                        <input type="hidden" id="edit-id" name="id">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="edit-nome" name="nome">
+                        <label for="email">Email:</label>
+                        <input type="email" id="edit-email" name="email">
+                        <label for="role">Função:</label>
+                        <select id="edit-role" name="role">
+                            <option value="usuario">Usuário</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button type="submit">Salvar</button>
+                        <button type="button" onclick="fecharModal()">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+
 
             <!-- Gerenciamento de Posts -->
             <div class="post-management">
@@ -85,5 +117,21 @@
             </div>
         </section>
     </main>
+
+    <script>
+        function abrirModal(element) {
+            document.getElementById('edit-id').value = element.getAttribute('data-id');
+            document.getElementById('edit-nome').value = element.getAttribute('data-nome');
+            document.getElementById('edit-email').value = element.getAttribute('data-email');
+            document.getElementById('edit-role').value = element.getAttribute('data-role');
+            document.getElementById('modal-editar-usuario').style.display = 'block';
+        }
+
+
+        function fecharModal() {
+            document.getElementById('modal-editar-usuario').style.display = 'none';
+        }
+    </script>
 </body>
+
 </html>

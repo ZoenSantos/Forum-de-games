@@ -243,6 +243,26 @@ app.post('/profile', upload.single('profileImage'), (req, res) => {
     });
 });
 
+app.post('/admin/editar-usuario', (req, res) => {
+    const { id, nome, email, role } = req.body;
+
+    // Verificar se o usuário tem permissão de admin para realizar a edição
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado! Apenas administradores podem editar usuários.');
+    }
+
+    // Atualizar as informações do usuário no banco de dados
+    const query = 'UPDATE users SET nome = ?, email = ?, role = ? WHERE id = ?';
+    db.query(query, [nome, email, role, id], (err, result) => {
+        if (err) {
+            console.error('Erro ao atualizar o usuário no MySQL:', err);
+            return res.status(500).send('Erro ao atualizar o usuário.');
+        }
+
+        res.redirect('/dashbordAdmin'); // Redireciona de volta para o painel admin
+    });
+});
+
 // Rota para a página inicial
 app.get('/', (req, res) => {
     if (req.session && req.session.user) {
