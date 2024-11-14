@@ -43,18 +43,37 @@
     </div>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function (event) {
-            const senha = document.getElementById('senha').value;
-            const confirmarSenha = document.getElementById('confirmar-senha').value;
-            const errorMessage = document.getElementById('error-message');
+document.querySelector('form').addEventListener('submit', function (event) {
+        const email = document.getElementById('email').value;
+        const telefone = document.getElementById('telefone').value;
+        const errorMessage = document.getElementById('error-message');
+        const senha = document.getElementById('senha').value;
+        const confirmarSenha = document.getElementById('confirmar-senha').value;
 
-            if (senha !== confirmarSenha) {
-                event.preventDefault();
-                errorMessage.textContent = "As senhas não coincidem!";
-            } else {
-                errorMessage.textContent = "";
-            }
-        });
+        // Reset error message
+        errorMessage.textContent = '';
+
+        // Verificação de telefone: só aceita números
+        if (!/^\d+$/.test(telefone)) {
+            event.preventDefault();
+            errorMessage.textContent = "O telefone deve conter apenas números.";
+            return;
+        }
+
+        // Verificação de email: deve terminar com @gmail.com ou @outlook.com
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com)$/;
+        if (!emailPattern.test(email)) {
+            event.preventDefault();
+            errorMessage.textContent = "O email deve ser um @gmail.com ou @outlook.com.";
+            return;
+        }
+
+        // Verificação de senhas: deve coincidir
+        if (senha !== confirmarSenha) {
+            event.preventDefault();
+            errorMessage.textContent = "As senhas não coincidem!";
+        }
+    });
     </script>
 </body>
 

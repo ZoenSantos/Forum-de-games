@@ -72,6 +72,24 @@ app.post('/cadastro', (req, res) => {
     // Query para inserir os dados do usuário no banco de dados
     const sql = 'INSERT INTO users (nome, email, telefone, senha) VALUES (?, ?, ?, ?)';
 
+    // Validações
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com)$/;
+    const isTelefoneValid = /^\d+$/.test(telefone);
+    const isEmailValid = emailPattern.test(email);
+
+    if (!isTelefoneValid) {
+        return res.render('cadastro', { error: "O telefone deve conter apenas números." });
+    }
+
+    if (!isEmailValid) {
+        return res.render('cadastro', { error: "O email deve ser um @gmail.com ou @outlook.com." });
+    }
+
+    if (senha !== confirmarSenha) {
+        return res.render('cadastro', { error: "As senhas não coincidem!" });
+    }
+
+
     // Inserindo os dados no banco de dados, incluindo o campo 'role'
     db.query(sql, [nome, email, telefone, senha], (err, results) => {
         if (err) {
