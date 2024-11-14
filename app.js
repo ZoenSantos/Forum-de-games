@@ -283,6 +283,20 @@ app.post('/admin/editar-usuario', (req, res) => {
     });
 });
 
+app.post('/post', (req, res) => {
+    const { titulo, conteudo } = req.body;
+    const query = 'INSERT INTO posts (titulo, conteudo) VALUES (?, ?)';
+
+    db.query(query, [titulo, conteudo], (err, result) => {
+        if (err) {
+            console.error('Erro ao criar o post no MySQL:', err);
+            return res.status(500).send('Erro ao criar o post.');
+        }
+        res.redirect('/dashbord'); // Redireciona após a criação do post
+    });
+});
+
+
 // Rota para a página inicial
 app.get('/', (req, res) => {
     if (req.session && req.session.user) {
@@ -369,8 +383,7 @@ app.get('/dashbord', checkSession, (req, res) => {
     });
 });
 
-app.get('/post', checkSession, (req, res) => {
-    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
+app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
     if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
         return res.status(403).send('Acesso negado! Faça o login primeiro');
     }
