@@ -185,6 +185,26 @@ app.post('/profile', upload.single('profileImage'), (req, res) => {
     });
 });
 
+app.delete('/admin/deletar-usuario/:id', (req, res) => {
+    const userId = req.params.id;
+
+    // Verificar se o usuário tem permissão de admin para deletar usuários
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado! Apenas administradores podem deletar usuários.');
+    }
+
+    // Query para deletar o usuário do banco de dados
+    const query = 'DELETE FROM users WHERE id = ?';
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error('Erro ao deletar usuário no MySQL:', err);
+            return res.status(500).send('Erro ao deletar o usuário.');
+        }
+
+        res.status(200).send('Usuário deletado com sucesso!');
+    });
+});
+
 // Rota para exibir um post individual no lerReview.ejs
 app.get('/lerReview/:id', (req, res) => {
     const { id } = req.params; // Pegando o ID do post na URL

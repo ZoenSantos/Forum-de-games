@@ -78,9 +78,10 @@
                                 <td>
                                     <a href="#" data-id="<%= user.id %>" data-nome="<%= user.nome %>"
                                         data-email="<%= user.email %>" data-role="<%= user.role %>"
-                                        onclick="abrirModal(this)">Editar</a> |
-                                    <a href="/admin/deletar-usuario/<%= user.id %>"
-                                        onclick="return confirm('Tem certeza que deseja remover este usuário?')">Remover</a>
+                                        onclick="abrirModal(this)">Editar
+                                    </a> |
+                                    <a href="#" data-id="<%= user.id %>" onclick="deletarUsuario(this)">Remover</a>
+
                                 </td>
                             </tr>
                             <% }) %>
@@ -130,6 +131,24 @@
 
         function fecharModal() {
             document.getElementById('modal-editar-usuario').style.display = 'none';
+        }
+
+        function deletarUsuario(element) {
+            const userId = element.getAttribute('data-id');
+            if (confirm('Tem certeza que deseja remover este usuário?')) {
+                fetch(`/admin/deletar-usuario/${userId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Usuário removido com sucesso!');
+                            location.reload(); // Recarrega a página para atualizar a lista de usuários
+                        } else {
+                            alert('Erro ao remover usuário');
+                        }
+                    })
+                    .catch(error => console.error('Erro:', error));
+            }
         }
     </script>
 </body>
