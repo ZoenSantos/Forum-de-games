@@ -44,9 +44,9 @@
     <header>
         <h1>Reviews de Jogos</h1>
         <nav>
-            <a href="/">Inicio</a>
+            <a href="/dashbordAdmin">Inicio</a>
             <a href="/dicas">Dicas</a>
-            <a href="/reviews">Reviews</a>
+            <a href="/reviewEscritor">Reviews</a>
             <a href="/easter-eggs">Easter Eggs</a>
         </nav>
         <!-- Verifica se o usuário está logado -->
@@ -55,12 +55,12 @@
                 <% if (user) { %>
                     <!-- Se o usuário está logado, mostra opções personalizadas -->
                     <li><a href="/profile">Meu Perfil</a></li>
-                    <li><a href="/">Sair</a></li>
+                    <li><a href="/logout">Sair</a></li>
                     <% } else { %>
                         <!-- Se o usuário NÃO está logado, mostra "Faça login" e "Cadastre-se" -->
                         <li><a href="/login">Faça Login</a></li>
                         <li><a href="/cadastro">Cadastre-se</a></li>
-                    <% } %>
+                        <% } %>
             </ul>
         </nav>
     </header>
@@ -68,7 +68,7 @@
         <h2>Leia as últimas reviews!</h2>
         <p>Aqui você encontra análises detalhadas sobre os jogos mais recentes.</p>
         <p>Confira também o vídeo com as melhores análises no <a
-                href="https://www.youtube.com/watch?v=m2xswMyqgsw&list=PLaV1nMv3TVykN0Es6m23DA1X_3HgNKJLq&pp=iAQB"
+                href="https://www.youtube.com/playlist?list=PLH9fqbYeMD3P5qMok46jKIgfUDxsb61E0"
                 target="_blank">YouTube</a>.</p>
         <br>
         <h2>Olá caso queira escrever uma review pode clicar <a href="/post">aqui</a></h2>
@@ -80,26 +80,55 @@
 
             <script>
                 // Faz uma solicitação para a rota API que retorna as postagens
-                fetch('/api/postagens')
-                    .then(response => response.json())
-                    .then(postagens => {
-                        const postagensList = document.getElementById('postagens-list');
+                function carregarPostagens() {
+                    fetch('/api/postagens')
+                        .then(response => response.json())
+                        .then(postagens => {
+                            const postagensList = document.getElementById('postagens-list');
+                            postagensList.innerHTML = ''; // Limpa a lista antes de preencher
 
-                        if (postagens && postagens.length) {
-                            postagens.forEach(post => {
+                            if (postagens && postagens.length) {
+                                postagens.forEach(post => {
+                                    const listItem = document.createElement('li');
+                                    listItem.innerHTML = `
+                                <a href="/lerReview/${post.id}">${post.titulo}</a>
+                                <% if (user && user.role === 'admin') { %>
+                                    <!-- Exibe o botão de deletar apenas para administradores -->
+                                    <button onclick="deletarPost(${post.id})">Deletar</button>
+                                <% } %>
+                            `;
+                                    postagensList.appendChild(listItem);
+                                });
+                            } else {
                                 const listItem = document.createElement('li');
-                                listItem.innerHTML = `<a href="/lerReview/${post.id}">${post.titulo}</a>`;
+                                listItem.textContent = 'Nenhuma postagem disponível.';
                                 postagensList.appendChild(listItem);
-                            });
-                        } else {
-                            const listItem = document.createElement('li');
-                            listItem.textContent = 'Nenhuma postagem disponível.';
-                            postagensList.appendChild(listItem);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro ao obter postagens:', error);
-                    });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao obter postagens:', error);
+                        });
+                }
+
+                // Função para deletar um post
+                function deletarPost(postId) {
+                    fetch(`/deletarPost/${postId}`, { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) {
+                                alert('Post deletado com sucesso!');
+                                carregarPostagens(); // Recarrega a lista de postagens
+                            } else {
+                                alert('Erro ao deletar o post');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao deletar o post:', error);
+                            alert('Erro ao deletar o post');
+                        });
+                }
+
+                // Carrega as postagens ao carregar a página
+                carregarPostagens();
             </script>
         </div>
     </main>

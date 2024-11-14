@@ -7,8 +7,9 @@ const session = require('express-session');
 const multer = require('multer');
 const checkSession = require('./middlewares/sessionCheck'); // Importando o middleware
 const router = express.Router();
-
 const app = express();
+
+app.use(express.urlencoded({ extended: true })); // Para lidar com dados de formulários
 
 // Configuração da sessão
 app.use(session({
@@ -161,7 +162,7 @@ app.post('/deletarPost/:id', (req, res) => {
             return res.status(500).send('Erro ao deletar o post!');
         }
 
-        res.redirect('/dashbordAdmin'); // Redireciona para o dashboard admin após deletar
+        res.status(200).send('Post deletado com sucesso!'); // Responde com status 200 em caso de sucesso
     });
 });
 
@@ -249,7 +250,7 @@ app.get('/', (req, res) => {
         return res.redirect('/dashbord');
     }
 
-    res.render('index', { title: 'Página Inicial' });
+    res.render('index', { title: 'Página Inicial', user: req.session.user });
 });
 
 app.get('/login', (req, res) => {
@@ -301,36 +302,32 @@ app.get('/dashbordAdmin', (req, res) => {
     });
 });
 
-
 app.get('/dashbord', checkSession, (req, res) => {
     const userId = req.session.user.id;
-    
+
     // Consulta para obter a imagem de perfil do usuário
     db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
         if (err) {
             console.error('Erro ao buscar imagem de perfil:', err);
             return res.status(500).send('Erro ao carregar o dashboard');
         }
-        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
-        // Atualiza a sessão com a imagem de perfil
-        req.session.user.profile_image = profileImage;
-        // Renderiza o dashboard com a imagem de perfil
-        res.render('dashbord', { user: req.session.user });
-    });
 
-    if (req.session.user) {
+        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
+        req.session.user.profile_image = profileImage; // Atualiza a sessão com a imagem de perfil
+
+        // Condições para redirecionar ou renderizar a página apropriada
         if (req.session.user.role === 'admin') {
-            // Se o usuário for admin, redireciona para o dashbordAdmin
+            // Se o usuário é admin, redireciona para o dashbordAdmin
             return res.redirect('/dashbordAdmin');
         } else if (req.session.user.role === 'usuario') {
-            // Se o usuário for apenas um 'usuario', renderiza o dashboard normal
-            return res.render('dashbord', { title: 'Dashboard do Usuário' });
+            // Renderiza o dashboard para o usuário padrão
+            return res.render('dashbord', { user: req.session.user, title: 'Dashboard do Usuário' });
+        } else {
+            // Caso o role seja inválido, envia uma mensagem de acesso negado
+            return res.status(403).send('Acesso negado! Role inválido.');
         }
-    }
-    // Caso contrário, redireciona para a página de login (caso alguém chegue até aqui sem estar logado)
-    return res.redirect('/login');
+    });
 });
-
 
 app.get('/post', checkSession, (req, res) => {
     // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
@@ -342,8 +339,24 @@ app.get('/post', checkSession, (req, res) => {
     res.render('post', { title: 'Tela para escrever as reviews' });
 });
 
-
 app.get('/reviewEscritor', (req, res) => {
+    // Certifique-se de que o usuário está autenticado e é um admin
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Consulta para buscar todos os usuários do banco de dados
+    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar usuários:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+
+        // Certifique-se de que "results" está definido e contém os dados de usuários
+        if (!results || results.length === 0) {
+            console.warn('Nenhum usuário encontrado.');
+        }
+    });
     res.render('reviewEscritor', { user: req.session.user });
 });
 
@@ -368,5 +381,44 @@ app.get('/profile', (req, res) => {
     });
 });
 
+// Rota para logout
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Erro ao destruir a sessão:', err);
+            return res.status(500).send('Erro ao sair');
+        }
+        res.redirect('/'); // Redireciona para a página inicial após o logout
+    });
+});
 
+// Rota para deletar um usuário
+app.get('/admin/deletar-usuario/:id', checkSession, (req, res) => {
+    const userId = req.params.id;
+
+    // Função para deletar o usuário do banco de dados
+    deleteUserById(userId, (err) => {
+        if (err) {
+            return res.status(500).send('Erro ao deletar o usuário');
+        }
+
+        res.redirect('/dashboardAdmin'); // Redireciona de volta para o painel de administração após a exclusão
+    });
+});
+
+// Rota para renderizar a página de edição de usuário
+app.get('/admin/editar-usuario/:id', checkSession, (req, res) => {
+    const userId = req.params.id;
+
+    // Aqui você buscaria o usuário no banco de dados pelo ID
+    // Vamos assumir que você tem uma função chamada findUserById para isso
+    findUserById(userId, (err, user) => {
+        if (err || !user) {
+            return res.status(404).send('Usuário não encontrado');
+        }
+
+        // Renderize uma página de edição, passando os dados do usuário
+        res.render('editar-usuario', { user });
+    });
+});
 
