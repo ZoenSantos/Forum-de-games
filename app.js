@@ -68,7 +68,7 @@ db.connect((err) => {
 
 // Rota para processar o cadastro
 app.post('/cadastro', (req, res) => {
-    const { nome, email, telefone, senha } = req.body;
+    const { nome, email, telefone, senha, confirmarSenha } = req.body;
     // Query para inserir os dados do usuário no banco de dados
     const sql = 'INSERT INTO users (nome, email, telefone, senha) VALUES (?, ?, ?, ?)';
 
