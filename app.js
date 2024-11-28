@@ -6,6 +6,8 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const multer = require('multer');
 const checkSession = require('./middlewares/sessionCheck'); // Importando o middleware
+const notFoundMiddleware = require('./middlewares/notFoundMiddleware');
+const isAuthenticated = require('./middlewares/authMiddleware'); // Importação correta do middleware
 const router = express.Router();
 const app = express();
 
@@ -26,7 +28,7 @@ app.listen(port, () => {
 });
 
 // Configurando o motor de visualização EJS
-app.set('views', path.join(__dirname, 'view'));
+app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
@@ -49,6 +51,190 @@ app.use('/uploads', express.static('uploads'));
 
 // Middleware para analisar o corpo das requisições
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Rota para a página inicial
+app.get('/', (req, res) => {
+    if (req.session && req.session.user) {
+        // Se o usuário está logado, redireciona para o dashboard
+        return res.redirect('/dashbord');
+    }
+
+    res.render('index', { title: 'Página Inicial', user: req.session.user });
+});
+
+app.get('/login', (req, res) => {
+    res.render('login', { title: 'Página Login' });
+});
+
+
+// Rota para a página de cadastro
+app.get('/cadastro', (req, res) => {
+    res.render('cadastro', { title: 'Cadastro' });
+});
+
+app.get('/dicas', (req, res) => {
+    res.render('dicas', { user: req.session.user });
+});
+
+app.get('/easter-eggs', (req, res) => {
+    res.render('easter-eggs', { user: req.session.user });
+});
+
+app.get('/forgot', (req, res) => {
+    res.render('forgot', { title: 'Esqueci a senha' });
+});
+
+app.get('/reviews', (req, res) => {
+    res.render('reviews', { user: req.session.user });
+});
+
+app.get('/dashbordAdmin', isAuthenticated, (req, res) => {
+    // Certifique-se de que o usuário está autenticado e é um admin
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Consulta para buscar todos os usuários do banco de dados
+    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar usuários:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+
+        // Certifique-se de que "results" está definido e contém os dados de usuários
+        if (!results || results.length === 0) {
+            console.warn('Nenhum usuário encontrado.');
+        }
+
+        // Renderiza o dashboard passando a lista de usuários e o usuário atual
+        res.render('dashbordAdmin', { user: req.session.user, users: results });
+        console.log(results);
+    });
+});
+
+app.get('/dashbord', checkSession, isAuthenticated, (req, res) => {
+    const userId = req.session.user.id;
+
+    db.query('SELECT * FROM posts WHERE id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).send('Erro ao buscar os dados!');
+        res.render('dashbord', { user: req.session.user, posts: results });
+    });
+
+    // Consulta para obter a imagem de perfil do usuário
+    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar imagem de perfil:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+
+        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
+        req.session.user.profile_image = profileImage; // Atualiza a sessão com a imagem de perfil
+
+        // Condições para redirecionar ou renderizar a página apropriada
+        if (req.session.user.role === 'admin') {
+            // Se o usuário é admin, redireciona para o dashbordAdmin
+            return res.redirect('/dashbordAdmin');
+        } else if (req.session.user.role === 'usuario') {
+            // Renderiza o dashboard para o usuário padrão
+            return res.render('dashbord', { user: req.session.user, title: 'Dashboard do Usuário' });
+        } else {
+            // Caso o role seja inválido, envia uma mensagem de acesso negado
+            return res.status(403).send('Acesso negado! Role inválido.');
+        }
+    });
+});
+
+app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
+    if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
+        return res.status(403).send('Acesso negado! Faça o login primeiro');
+    }
+
+    // Se a verificação passou, renderiza a página 'post'
+    res.render('post', { title: 'Tela para escrever as reviews' });
+});
+
+app.get('/reviewEscritor', (req, res) => {
+    // Certifique-se de que o usuário está autenticado e é um admin
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Consulta para buscar todos os usuários do banco de dados
+    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar usuários:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+
+        // Certifique-se de que "results" está definido e contém os dados de usuários
+        if (!results || results.length === 0) {
+            console.warn('Nenhum usuário encontrado.');
+        }
+    });
+    res.render('reviewEscritor', { user: req.session.user });
+});
+
+app.get('/lerReview', (req, res) => {
+    res.render('lerReview', { user: req.session.user });
+});
+
+app.get('/cadastrosucesso', (req, res) => {
+    res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
+});
+
+app.get('/profile', (req, res) => {
+    const userId = req.session.user.id;
+
+    db.query('SELECT nome, role, profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            return res.status(500).send('Erro ao buscar dados do usuário');
+        }
+
+        const user = results[0];
+        res.render('profile', { user });
+    });
+});
+
+// Rota para logout
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Erro ao destruir a sessão:', err);
+            return res.status(500).send('Erro ao sair');
+        }
+        res.redirect('/'); // Redireciona para a página inicial após o logout
+    });
+});
+
+// Rota para deletar um usuário
+app.get('/admin/deletar-usuario/:id', checkSession, (req, res) => {
+    const userId = req.params.id;
+
+    // Função para deletar o usuário do banco de dados
+    deleteUserById(userId, (err) => {
+        if (err) {
+            return res.status(500).send('Erro ao deletar o usuário');
+        }
+
+        res.redirect('/dashboardAdmin'); // Redireciona de volta para o painel de administração após a exclusão
+    });
+});
+
+// Rota para renderizar a página de edição de usuário
+app.get('/admin/editar-usuario/:id', checkSession, (req, res) => {
+    const userId = req.params.id;
+
+    // Aqui você buscaria o usuário no banco de dados pelo ID
+    // Vamos assumir que você tem uma função chamada findUserById para isso
+    findUserById(userId, (err, user) => {
+        if (err || !user) {
+            return res.status(404).send('Usuário não encontrado');
+        }
+
+        // Renderize uma página de edição, passando os dados do usuário
+        res.render('editar-usuario', { user });
+    });
+});
 
 // Configuração da conexão com o MySQL
 const db = mysql.createConnection({
@@ -119,7 +305,7 @@ app.post('/cadastro', (req, res) => {
 });
 
 // Rota para processar o login
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { email, senha } = req.body;
 
     // Verifica se o email e senha foram fornecidos
@@ -129,6 +315,7 @@ app.post('/login', (req, res) => {
 
     // Query para verificar o login do usuário
     const query = 'SELECT * FROM users WHERE email = ? AND senha = ?';
+    
 
     db.query(query, [email, senha], (err, results) => {
         if (err) {
@@ -142,25 +329,29 @@ app.post('/login', (req, res) => {
         }
 
         if (results.length > 0) {
-            const user = results[0];
-
-            // Criando a sessão com os dados do usuário
+            const user = results[0]; // Obtém o primeiro (e único) resultado
+        
+            // Criação da sessão
             req.session.user = {
                 id: user.id,
                 nome: user.nome,
-                role: user.role
+                role: user.role,
             };
-        }
-        // Usuário encontrado
-        const user = results[0]; // Obtém o primeiro (e único) resultado
-
-        // Redireciona de acordo com o papel (role) do usuário
-        if (user.role === 'usuario') {
-            return res.redirect('/dashbord'); // Escritores vão para o dashboard de escritores
-        } else if (user.role === 'admin') {
-            return res.redirect('/dashbordAdmin'); // Admins vão para o dashboard admin
+        
+            // Salva o ID do usuário na sessão
+            req.session.userId = user.id;
+        
+            // Redireciona de acordo com o papel (role) do usuário
+            if (user.role === 'usuario') {
+                return res.redirect('/dashbord'); // Escritores vão para o dashboard de escritores
+            } else if (user.role === 'admin') {
+                return res.redirect('/dashbordAdmin'); // Admins vão para o dashboard admin
+            } else {
+                return res.status(403).send('Acesso negado! Role inválido.');
+            }
         } else {
-            return res.status(403).send('Acesso negado! Role inválido.');
+            // Caso nenhum usuário seja encontrado
+            res.send('Usuário ou senha inválidos');
         }
     });
 });
@@ -314,182 +505,8 @@ app.post('/post', (req, res) => {
     });
 });
 
+//Usando o middleware
+app.use(isAuthenticated);
 
-// Rota para a página inicial
-app.get('/', (req, res) => {
-    if (req.session && req.session.user) {
-        // Se o usuário está logado, redireciona para o dashboard
-        return res.redirect('/dashbord');
-    }
-
-    res.render('index', { title: 'Página Inicial', user: req.session.user });
-});
-
-app.get('/login', (req, res) => {
-    res.render('login', { title: 'Página Login' });
-});
-
-// Rota para a página de cadastro
-app.get('/cadastro', (req, res) => {
-    res.render('cadastro', { title: 'Cadastro' });
-});
-
-app.get('/dicas', (req, res) => {
-    res.render('dicas', { user: req.session.user });
-});
-
-app.get('/easter-eggs', (req, res) => {
-    res.render('easter-eggs', { user: req.session.user });
-});
-
-app.get('/forgot', (req, res) => {
-    res.render('forgot', { title: 'Esqueci a senha' });
-});
-
-app.get('/reviews', (req, res) => {
-    res.render('reviews', { user: req.session.user });
-});
-
-app.get('/dashbordAdmin', (req, res) => {
-    // Certifique-se de que o usuário está autenticado e é um admin
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Acesso negado!');
-    }
-
-    // Consulta para buscar todos os usuários do banco de dados
-    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
-        if (err) {
-            console.error('Erro ao buscar usuários:', err);
-            return res.status(500).send('Erro ao carregar o dashboard');
-        }
-
-        // Certifique-se de que "results" está definido e contém os dados de usuários
-        if (!results || results.length === 0) {
-            console.warn('Nenhum usuário encontrado.');
-        }
-
-        // Renderiza o dashboard passando a lista de usuários e o usuário atual
-        res.render('dashbordAdmin', { user: req.session.user, users: results });
-        console.log(results);
-    });
-});
-
-app.get('/dashbord', checkSession, (req, res) => {
-    const userId = req.session.user.id;
-
-    // Consulta para obter a imagem de perfil do usuário
-    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err) {
-            console.error('Erro ao buscar imagem de perfil:', err);
-            return res.status(500).send('Erro ao carregar o dashboard');
-        }
-
-        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
-        req.session.user.profile_image = profileImage; // Atualiza a sessão com a imagem de perfil
-
-        // Condições para redirecionar ou renderizar a página apropriada
-        if (req.session.user.role === 'admin') {
-            // Se o usuário é admin, redireciona para o dashbordAdmin
-            return res.redirect('/dashbordAdmin');
-        } else if (req.session.user.role === 'usuario') {
-            // Renderiza o dashboard para o usuário padrão
-            return res.render('dashbord', { user: req.session.user, title: 'Dashboard do Usuário' });
-        } else {
-            // Caso o role seja inválido, envia uma mensagem de acesso negado
-            return res.status(403).send('Acesso negado! Role inválido.');
-        }
-    });
-});
-
-app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
-    if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
-        return res.status(403).send('Acesso negado! Faça o login primeiro');
-    }
-
-    // Se a verificação passou, renderiza a página 'post'
-    res.render('post', { title: 'Tela para escrever as reviews' });
-});
-
-app.get('/reviewEscritor', (req, res) => {
-    // Certifique-se de que o usuário está autenticado e é um admin
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Acesso negado!');
-    }
-
-    // Consulta para buscar todos os usuários do banco de dados
-    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
-        if (err) {
-            console.error('Erro ao buscar usuários:', err);
-            return res.status(500).send('Erro ao carregar o dashboard');
-        }
-
-        // Certifique-se de que "results" está definido e contém os dados de usuários
-        if (!results || results.length === 0) {
-            console.warn('Nenhum usuário encontrado.');
-        }
-    });
-    res.render('reviewEscritor', { user: req.session.user });
-});
-
-app.get('/lerReview', (req, res) => {
-    res.render('lerReview', { user: req.session.user });
-});
-
-app.get('/cadastrosucesso', (req, res) => {
-    res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
-});
-
-app.get('/profile', (req, res) => {
-    const userId = req.session.user.id;
-
-    db.query('SELECT nome, role, profile_image FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err) {
-            return res.status(500).send('Erro ao buscar dados do usuário');
-        }
-
-        const user = results[0];
-        res.render('profile', { user });
-    });
-});
-
-// Rota para logout
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Erro ao destruir a sessão:', err);
-            return res.status(500).send('Erro ao sair');
-        }
-        res.redirect('/'); // Redireciona para a página inicial após o logout
-    });
-});
-
-// Rota para deletar um usuário
-app.get('/admin/deletar-usuario/:id', checkSession, (req, res) => {
-    const userId = req.params.id;
-
-    // Função para deletar o usuário do banco de dados
-    deleteUserById(userId, (err) => {
-        if (err) {
-            return res.status(500).send('Erro ao deletar o usuário');
-        }
-
-        res.redirect('/dashboardAdmin'); // Redireciona de volta para o painel de administração após a exclusão
-    });
-});
-
-// Rota para renderizar a página de edição de usuário
-app.get('/admin/editar-usuario/:id', checkSession, (req, res) => {
-    const userId = req.params.id;
-
-    // Aqui você buscaria o usuário no banco de dados pelo ID
-    // Vamos assumir que você tem uma função chamada findUserById para isso
-    findUserById(userId, (err, user) => {
-        if (err || !user) {
-            return res.status(404).send('Usuário não encontrado');
-        }
-
-        // Renderize uma página de edição, passando os dados do usuário
-        res.render('editar-usuario', { user });
-    });
-});
-
+// Usando o middleware
+app.use(notFoundMiddleware);
