@@ -51,7 +51,7 @@ profile_image VARCHAR(255) DEFAULT 'default-avatar.png'
 <br>
 <br>
 CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     nome VARCHAR(200) NOT NULL,
     email VARCHAR(180) UNIQUE NOT NULL,
     senha VARCHAR(200) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE users (
   );
 <h3>Agora a outra tabela tem o nome de posts e nela contêm as seguintes colunas:</h3>
 <br>
-id(id INT AUTO_INCREMENT PRIMARY KEY)
+id(id INT AUTO_INCREMENT PRIMARY KEY NOT NULL)
 <br>
 titulo(titulo VARCHAR(255) NOT NULL)
 <br>
@@ -69,11 +69,15 @@ conteudo(conteudo TEXT NOT NULL)
 <br>
 <br>
 CREATE TABLE posts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     titulo VARCHAR(255) NOT NULL,
     conteudo TEXT NOT NULL
 );
 <br>
+<h3>Outra tabela que terá que ser efetuada é a tabela de postDicas para que se possa</h3>
+<h3>ter com que os usuarios possam realizar a ação de dar dicas</h3>
+<br>
+CREATE TABLE posts ( idDicas INT AUTO_INCREMENT PRIMARY KEY NOT NULL, titulo VARCHAR(255) NOT NULL, conteudo TEXT NOT NULL ); 
 <br>
 <h2>PARA FAZER O SISTEMA FUNCIONA:</h2>
 <br>
