@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameGenius - Dashboard Admin</title>
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <h1>🕹️ Bem-vindo ao GameGenius - Painel Admin!</h1>
+        <nav>
+            <a href="/dashbordAdmin">Início</a>
+            <a href="/dicas">Dicas</a>
+            <a href="/reviewEscritor">Reviews</a>
+            <a href="/easter-eggs">Easter Eggs</a>
+        </nav>
+        <nav class="auth-buttons">
+            <ul>
+                <% if (user) { %>
+                    <li><a href="/profile">Meu Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                    <% } else { %>
+                        <li><a href="/login">Faça Login</a></li>
+                        <li><a href="/cadastro">Cadastre-se</a></li>
+                        <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Explore o mundo dos jogos!</h2>
+        <p>Aqui você encontra dicas, reviews e segredos para se tornar um verdadeiro gênio dos games!</p>
+
+        <div class="profile-section">
+            <img src="/uploads/<%= user.profile_image %>" alt="Imagem de Perfil" class="profile-image">
+            <p>Bem-vindo, <%= user.nome %>!</p>
+        </div>
+
+        <!-- Seção específica para recursos de administração -->
+        <section class="admin-section">
+            <h3>Área de Administração</h3>
+
+            <!-- Gerenciamento de Usuários -->
+            <div class="user-management">
+                <h4>Gerenciamento de Usuários</h4>
+                <p>Aqui você pode visualizar, editar ou remover usuários do sistema.</p>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Função</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Lista de usuários. Suponha que o controller passe um array de usuários -->
+                        <% users.forEach(user=> { %>
+                            <tr>
+                                <td>
+                                    <%= user.id %>
+                                </td>
+                                <td>
+                                    <%= user.nome %>
+                                </td>
+                                <td>
+                                    <%= user.email %>
+                                </td>
+                                <td>
+                                    <%= user.role %>
+                                </td>
+                                <td>
+                                    <a href="#" data-id="<%= user.id %>" data-nome="<%= user.nome %>"
+                                        data-email="<%= user.email %>" data-role="<%= user.role %>"
+                                        onclick="abrirModal(this)">Editar
+                                    </a> |
+                                    <a href="#" data-id="<%= user.id %>" onclick="deletarUsuario(this)">Remover</a>
+
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <div id="modal-editar-usuario" style="display: none;">
+                <div class="modal-content">
+                    <h2>Editar Usuário</h2>
+                    <form action="/admin/editar-usuario" method="POST">
+                        <input type="hidden" id="edit-id" name="id">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="edit-nome" name="nome">
+                        <label for="email">Email:</label>
+                        <input type="email" id="edit-email" name="email">
+                        <label for="role">Função:</label>
+                        <select id="edit-role" name="role">
+                            <option value="usuario">Usuário</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button type="submit">Salvar</button>
+                        <button type="button" onclick="fecharModal()">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+
+
+            <!-- Gerenciamento de Posts -->
+            <div class="post-management">
+                <h4>Gerenciamento de Posts</h4>
+                <p>Crie e gerencie posts de reviews para a comunidade.</p>
+                <a href="/post" class="btn">Criar Novo Post</a>
+                <!-- Aqui você poderia também listar posts, permitindo edição ou exclusão -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function abrirModal(element) {
+            document.getElementById('edit-id').value = element.getAttribute('data-id');
+            document.getElementById('edit-nome').value = element.getAttribute('data-nome');
+            document.getElementById('edit-email').value = element.getAttribute('data-email');
+            document.getElementById('edit-role').value = element.getAttribute('data-role');
+            document.getElementById('modal-editar-usuario').style.display = 'block';
+        }
+
+
+        function fecharModal() {
+            document.getElementById('modal-editar-usuario').style.display = 'none';
+        }
+
+        function deletarUsuario(element) {
+            const userId = element.getAttribute('data-id');
+            if (confirm('Tem certeza que deseja remover este usuário?')) {
+                fetch(`/admin/deletar-usuario/${userId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Usuário removido com sucesso!');
+                            location.reload(); // Recarrega a página para atualizar a lista de usuários
+                        } else {
+                            alert('Erro ao remover usuário');
+                        }
+                    })
+                    .catch(error => console.error('Erro:', error));
+            }
+        }
+    </script>
+</body>
+
+</html>

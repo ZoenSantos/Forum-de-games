@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuário - GameGenius</title>
+    <link rel="stylesheet" href="path/to/bootstrap.css">
+    <style>
+        body {
+            background: url('https://th.bing.com/th/id/R.0680e4e60daa9259443a45b2925e359e?rik=HXIHp70s0h44kA&pid=ImgRaw&r=0') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+        }
+
+        /* Overlay para escurecer o fundo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* Escurecendo o fundo para contraste */
+            z-index: -1;
+        }
+
+        .profile-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: rgba(43, 43, 61, 0.9);
+            /* Fundo semitransparente */
+            border: 1px solid #444;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f1c40f;
+        }
+
+        .profile-picture img {
+            display: block;
+            margin: 0 auto;
+            max-width: 150px;
+            border-radius: 50%;
+            border: 3px solid #f1c40f;
+        }
+
+        .profile-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+        }
+
+        .form-control:focus {
+            background-color: #333;
+            color: #fff;
+            border-color: #f1c40f;
+        }
+
+        label {
+            color: #f1c40f;
+        }
+
+        .profile-form .btn-primary {
+            width: 100%;
+            background-color: #f1c40f;
+            border-color: #f1c40f;
+            color: #333;
+        }
+
+        .profile-form .btn-primary:hover {
+            background-color: #d4ac0d;
+            border-color: #d4ac0d;
+        }
+    </style>
+
+    <script>
+        function previewProfilePicture(event) {
+            const image = document.getElementById('imgPreview');
+            image.src = URL.createObjectURL(event.target.files[0]);
+        }
+    </script>
+
+    <button><a href="/dashbord">Voltar</a> </button>
+
+</head>
+
+<body>
+    <div class="container profile-container">
+        <h2>Perfil de Usuário</h2>
+        <form class="profile-form" action="/profile" method="POST" enctype="multipart/form-data">
+            <!-- Foto de Perfil -->
+            <div class="form-group profile-picture">
+                <label for="profilePicture">Foto de Perfil</label>
+                <input type="file" id="profileImage" name="profileImage" class="form-control-file" onchange="previewProfilePicture(event)">
+                <img id="imgPreview" src="/uploads/<%= user.profile_image %>" alt="Profile Image" class="mt-3">
+            </div>
+            <!-- Nome de Usuário -->
+            <div class="form-group">
+                <label for="userName">Nome de Usuário</label>
+                <input type="text" id="userName" name="username" class="form-control" value="<%= user.nome %>" placeholder="Insira o nome de usuário">
+            </div>
+            <!-- Botão de Salvar -->
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </form>
+    </div>
+
+    <script>
+        function previewProfilePicture(event) {
+            const image = document.getElementById('imgPreview');
+            image.src = URL.createObjectURL(event.target.files[0]);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Post</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Fundo da página com GIF */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('https://i.gifer.com/embedded/download/HWUC.gif') no-repeat center center fixed; /* Substitua pelo URL do seu GIF */
+            background-size: cover;
+            color: #a0e9ff; /* Azul claro para o texto */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Camada para escurecer o fundo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, -0.1); /* Opacidade para escurecer o GIF */
+            z-index: 1;
+        }
+
+        /* Container do formulário */
+        form {
+            position: relative;
+            z-index: 2;
+            background: rgba(-36, -87, 29, 0.9);
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 255, 0, -0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 1em;
+            color: #00ff9f; /* Verde neon para o título */
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #a0e9ff; /* Azul claro */
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1em;
+            border: 2px solid #00ff9f; /* Borda neon verde */
+            border-radius: 8px;
+            background-color: rgba(0, 0, 20, 0.8);
+            color: #a0e9ff;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #00ff9f;
+            box-shadow: 0 0 10px #00ff9f, 0 0 20px #00ff9f; /* Efeito neon ao focar */
+            outline: none;
+        }
+
+        button {
+            background-color: #00ff9f;
+            color: #0a0a1e;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background-color: #a0e9ff; /* Azul claro ao passar o mouse */
+            color: #0a0a1e;
+            box-shadow: 0 0 10px #00ff9f, 0 0 20px #00ff9f;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 1em;
+            text-decoration: none;
+            color: #00ff9f;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #a0e9ff; /* Azul claro ao passar o mouse */
+        }
+    </style>
+</head>
+<body>
+    <h1>Criar Post</h1>
+    <form action="/post" method="POST">
+        <label for="titulo">Título:</label>
+        <input type="text" id="titulo" name="titulo" required>
+        <br>
+        <label for="conteudo">Conteúdo:</label>
+        <textarea id="conteudo" name="conteudo" rows="5" required></textarea>
+        <br>
+        <button type="submit">Publicar</button>
+    </form>
+    <a href="/dashboard">Voltar para a página inicial</a>
+</body>
+</html>

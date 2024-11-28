@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameGenius - Página Inicial</title>
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+
+<body>
+    <header>
+        <h1>🕹️ Bem-vindo ao GameGenius!</h1>
+        <nav>
+            <a href="/dashbord">Início</a>
+            <a href="/dicas">Dicas</a>
+            <a href="/reviews">Reviews</a>
+            <a href="/easter-eggs">Easter Eggs</a>
+        </nav>
+        <!-- Verifica se o usuário está logado -->
+        <nav class="auth-buttons">
+            <ul>
+                <% if (user) { %>
+                    <!-- Se o usuário está logado, mostra opções personalizadas -->
+                    <li><a href="/profile">Meu Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                    <% } else { %>
+                        <!-- Se o usuário NÃO está logado, mostra "Faça login" e "Cadastre-se" -->
+                        <li><a href="/login">Faça Login</a></li>
+                        <li><a href="/cadastro">Cadastre-se</a></li>
+                        <% } %>
+            </ul>
+        </nav>
+        <!--<div class="auth-buttons"> 
+            <img src="iconeE.png">
+        </div>-->
+
+    </header>
+    <main>
+        <h2>Explore o mundo dos jogos!</h2>
+        <p>Aqui você encontra dicas, reviews e segredos para se tornar um verdadeiro gênio dos games!</p>
+     
+        <div class="profile-section">
+            <img src="/uploads/<%= user.profile_image %>" alt="Imagem de Perfil" class="profile-image">
+            <p>Bem-vindo, <%= user.nome %>!</p>
+        </div>
+    </main>
+</body>
+
+</html>
