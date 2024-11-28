@@ -61,6 +61,38 @@
     <main>
         <h2>Dicas úteis para melhorar seu jogo!</h2>
         <p>Aqui você encontrará dicas para diversos jogos populares.</p>
+
+        <h2>Olá caso queira escrever uma review pode clicar <a href="/postDicas">aqui</a></h2>
+        <br>
+        <br>
+        <div class="container">
+            <h1>Dicas Postadas Recentes</h1>
+            <ul id="dicas-list"></ul>
+
+            <script>
+                // Carregar dicas via API
+                fetch('/api/postagensDicas')
+                    .then(response => response.json())
+                    .then(dicas => {
+                        const dicasList = document.getElementById('dicas-list');
+        
+                        if (dicas && dicas.length) {
+                            dicas.forEach(dica => {
+                                const listItem = document.createElement('li');
+                                listItem.innerHTML = `<a href="/lerDicas/${dica.idDicas}">${dica.titulo}</a>`;
+                                dicasList.appendChild(listItem);
+                            });
+                        } else {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = 'Nenhuma dica disponível.';
+                            dicasList.appendChild(listItem);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar as dicas:', error);
+                    });
+            </script>
+        </div>
     </main>
 </body>
 </html>

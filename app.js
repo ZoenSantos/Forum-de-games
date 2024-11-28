@@ -115,34 +115,40 @@ app.get('/dashbordAdmin', isAuthenticated, (req, res) => {
 app.get('/dashbord', checkSession, isAuthenticated, (req, res) => {
     const userId = req.session.user.id;
 
-    db.query('SELECT * FROM posts WHERE id = ?', [userId], (err, results) => {
-        if (err) return res.status(500).send('Erro ao buscar os dados!');
-        res.render('dashbord', { user: req.session.user, posts: results });
-    });
-
-    // Consulta para obter a imagem de perfil do usuário
-    db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, results) => {
+    // Consulta 1: Obter posts
+    db.query('SELECT * FROM posts WHERE id = ?', [userId], (err, postResults) => {
         if (err) {
-            console.error('Erro ao buscar imagem de perfil:', err);
-            return res.status(500).send('Erro ao carregar o dashboard');
+            console.error('Erro ao buscar os dados dos posts:', err);
+            return res.status(500).send('Erro ao buscar os dados!');
         }
 
-        const profileImage = results[0].profile_image || 'default-avatar.png'; // Imagem padrão se não houver
-        req.session.user.profile_image = profileImage; // Atualiza a sessão com a imagem de perfil
+        // Consulta 2: Obter imagem de perfil
+        db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, profileResults) => {
+            if (err) {
+                console.error('Erro ao buscar imagem de perfil:', err);
+                return res.status(500).send('Erro ao carregar o dashboard');
+            }
 
-        // Condições para redirecionar ou renderizar a página apropriada
-        if (req.session.user.role === 'admin') {
-            // Se o usuário é admin, redireciona para o dashbordAdmin
-            return res.redirect('/dashbordAdmin');
-        } else if (req.session.user.role === 'usuario') {
-            // Renderiza o dashboard para o usuário padrão
-            return res.render('dashbord', { user: req.session.user, title: 'Dashboard do Usuário' });
-        } else {
-            // Caso o role seja inválido, envia uma mensagem de acesso negado
-            return res.status(403).send('Acesso negado! Role inválido.');
-        }
+            // Lógica para imagem de perfil
+            const profileImage = profileResults[0]?.profile_image || 'default-avatar.png';
+            req.session.user.profile_image = profileImage;
+
+            // Lógica de redirecionamento
+            if (req.session.user.role === 'admin') {
+                return res.redirect('/dashbordAdmin');
+            } else if (req.session.user.role === 'usuario') {
+                return res.render('dashbord', {
+                    user: req.session.user,
+                    posts: postResults,
+                    title: 'Dashboard do Usuário',
+                });
+            } else {
+                return res.status(403).send('Acesso negado! Role inválido.');
+            }
+        });
     });
 });
+
 
 app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
     if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
@@ -153,30 +159,40 @@ app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário
     res.render('post', { title: 'Tela para escrever as reviews' });
 });
 
+app.get('/postDicas', (req, res) => {
+    if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
+        return res.status(403).send('Acesso negado! Faça o login primeiro');
+    }
+
+    // Se a verificação passou, renderiza a página 'post'
+    res.render('postDicas', { title: 'Tela para escrever as reviews' });
+});
+
 app.get('/reviewEscritor', (req, res) => {
-    // Certifique-se de que o usuário está autenticado e é um admin
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Acesso negado!');
     }
 
-    // Consulta para buscar todos os usuários do banco de dados
+    // Consulta para buscar os usuários
     db.query('SELECT id, nome, email, role FROM users', (err, results) => {
         if (err) {
             console.error('Erro ao buscar usuários:', err);
             return res.status(500).send('Erro ao carregar o dashboard');
         }
 
-        // Certifique-se de que "results" está definido e contém os dados de usuários
-        if (!results || results.length === 0) {
-            console.warn('Nenhum usuário encontrado.');
-        }
+        // Renderiza a página apenas após a consulta ser concluída
+        res.render('reviewEscritor', { user: req.session.user, users: results });
     });
-    res.render('reviewEscritor', { user: req.session.user });
 });
 
 app.get('/lerReview', (req, res) => {
     res.render('lerReview', { user: req.session.user });
 });
+
+app.get('/lerDicas', (req, res) => {
+    res.render('lerDicas', { user: req.session.user });
+});
+
 
 app.get('/cadastrosucesso', (req, res) => {
     res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
@@ -436,6 +452,27 @@ app.get('/lerReview/:id', (req, res) => {
     });
 });
 
+app.get('/lerDicas/:idDicas', (req, res) => {
+    const { idDicas } = req.params; // Pegando o ID do post na URL
+
+    const query = 'SELECT * FROM postsDicas WHERE idDicas = ?'; // Buscando o post pelo ID no banco de dados
+    db.query(query, [idDicas], (err, result) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).send('Erro ao carregar o post!');
+            return;
+        }
+
+        if (result.length > 0) {
+            // Se o post for encontrado, renderizamos o template e passamos os dados do post
+            res.render('lerDicas', { post: result[0] }); // Passa o post encontrado para o EJS
+        } else {
+            // Se o post não for encontrado, renderizamos o template com post = null
+            res.render('lerDicas', { post: null });
+        }
+    });
+});
+
 // Rota para retornar todas as postagens em formato JSON
 app.get('/api/postagens', (req, res) => {
     const query = 'SELECT * FROM posts';
@@ -444,6 +481,22 @@ app.get('/api/postagens', (req, res) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
             res.status(500).json({ error: 'Erro ao carregar as postagens!' });
+            return;
+        }
+
+        // Retorna as postagens como JSON
+        res.json(results);
+    });
+});
+
+// Rota para retornar todas as postagens em formato JSON
+app.get('/api/postagensDicas', (req, res) => {
+    const query = 'SELECT * FROM postsDicas';
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).json({ error: 'Erro ao carregar as dicas!' });
             return;
         }
 
@@ -504,6 +557,20 @@ app.post('/post', (req, res) => {
         res.redirect('/dashbord'); // Redireciona após a criação do post
     });
 });
+
+app.post('/postDicas', (req, res) => {
+    const { titulo, conteudo } = req.body;
+    const query = 'INSERT INTO postsDicas (titulo, conteudo) VALUES (?, ?)';
+
+    db.query(query, [titulo, conteudo], (err, result) => {
+        if (err) {
+            console.error('Erro ao criar o post dica no MySQL:', err);
+            return res.status(500).send('Erro ao criar o post.');
+        }
+        res.redirect('/dashbord'); // Redireciona após a criação do post
+    });
+});
+
 
 //Usando o middleware
 app.use(isAuthenticated);

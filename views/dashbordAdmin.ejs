@@ -8,6 +8,8 @@
     <link rel="icon" href="logo.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -76,13 +78,14 @@
                                     <%= user.role %>
                                 </td>
                                 <td>
-                                    <a href="#" data-id="<%= user.id %>" data-nome="<%= user.nome %>"
-                                        data-email="<%= user.email %>" data-role="<%= user.role %>"
-                                        onclick="abrirModal(this)">Editar
-                                    </a> |
-                                    <a href="#" data-id="<%= user.id %>" onclick="deletarUsuario(this)">Remover</a>
-
-                                </td>
+                                    <button class="btn-action edit" data-id="<%= user.id %>" data-nome="<%= user.nome %>"
+                                        data-email="<%= user.email %>" data-role="<%= user.role %>" onclick="abrirModal(this)">
+                                        <i class="fa fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn-action delete" data-id="<%= user.id %>" onclick="deletarUsuario(this)">
+                                        <i class="fa fa-trash"></i> Remover
+                                    </button>
+                                </td>                                
                             </tr>
                             <% }) %>
                     </tbody>
