@@ -60,22 +60,25 @@
         }
     </style>
 
+
     <title>
-        <%= dica ? dica.titulo : 'Dica não encontrada' %>
-    </title>
+        <%= post ? post.titulo : 'Post não encontrado' %>
+    </title> <!-- Se o post existir, mostra o título -->
 </head>
 
 <body>
     <header>
         <h1>
-            <%= dica ? dica.titulo : 'Erro: Dica não encontrada' %>
-        </h1>
+            <%= post ? post.titulo : 'Erro: Post não encontrado' %>
+        </h1> <!-- Renderiza o título do post -->
     </header>
+
     <section>
         <p>
-            <%= dica ? dica.conteudo : 'Conteúdo não disponível' %>
-        </p>
+            <%= post ? post.conteudo : 'Conteúdo não disponível' %>
+        </p> <!-- Renderiza o conteúdo do post -->
     </section>
+
 </body>
 
 </html>

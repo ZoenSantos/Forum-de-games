@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameGenius - Reviews</title>
+    <title>GameGenius - Admin Dicas</title>
     <link rel="icon" href="logo.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
-    <!-- Link para a fonte de jogos -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -42,11 +41,11 @@
 
 <body>
     <header>
-        <h1>Reviews de Jogos</h1>
+        <h1>Dicas de Jogos</h1>
         <nav>
-            <a href="/dashbordAdmin">Inicio</a>
-            <a href="/dicasAdmin">Dicas</a>
-            <a href="/reviewEscritor">Reviews</a>
+            <a href="/">Inicio</a>
+            <a href="/dicas">Dicas</a>
+            <a href="/reviews">Reviews</a>
             <a href="/easter-eggs">Easter Eggs</a>
         </nav>
         <!-- Verifica se o usuário está logado -->
@@ -65,70 +64,69 @@
         </nav>
     </header>
     <main>
-        <h2>Leia as últimas reviews!</h2>
-        <p>Aqui você encontra análises detalhadas sobre os jogos mais recentes.</p>
-        <p>Confira também o vídeo com as melhores análises no <a
-                href="https://www.youtube.com/playlist?list=PLH9fqbYeMD3P5qMok46jKIgfUDxsb61E0"
-                target="_blank">YouTube</a>.</p>
-        <br>
-        <h2>Olá caso queira escrever uma review pode clicar <a href="/post">aqui</a></h2>
+        <h2>Gerenciar Dicas</h2>
+        <h2>Dicas úteis para melhorar seu jogo!</h2>
+        <p>Aqui você encontrará dicas para diversos jogos populares.</p>
+
+        <h2>Olá caso queira escrever uma review pode clicar <a href="/postDicas">aqui</a></h2>
         <br>
         <br>
+        <p>Gerencie as dicas disponíveis e exclua aquelas que desejar.</p>
         <div class="container">
-            <h1>Postagens Recentes</h1>
-            <ul id="postagens-list"></ul>
+            <h1>Dicas Recentes</h1>
+            <ul id="dicas-list"></ul>
 
             <script>
-                // Carrega as postagens da API
-                function carregarPostagens() {
-                    fetch('/api/postagens')
+                // Carrega as dicas da API
+                function carregarDicas() {
+                    fetch('/api/postagensDicas')
                         .then(response => response.json())
-                        .then(postagens => {
-                            const postagensList = document.getElementById('postagens-list');
-                            postagensList.innerHTML = ''; // Limpa a lista antes de preencher
-            
-                            if (postagens && postagens.length) {
-                                postagens.forEach(post => {
+                        .then(dicas => {
+                            const dicasList = document.getElementById('dicas-list');
+                            dicasList.innerHTML = ''; // Limpa a lista antes de preencher
+
+                            if (dicas && dicas.length) {
+                                dicas.forEach(dica => {
                                     const listItem = document.createElement('li');
                                     listItem.innerHTML = `
-                                        <a href="/lerReview/${post.postId}">${post.titulo}</a>
+                                        <a href="/lerDicas/${dica.idDicas}">${dica.titulo}</a>
                                         <% if (user && user.role === 'admin') { %>
-                                            <button onclick="deletarPost(${post.postId})">Deletar</button>
+                                            <button onclick="deletarDica(${dica.idDicas})">Deletar</button>
                                         <% } %>
                                     `;
-                                    postagensList.appendChild(listItem);
+                                    dicasList.appendChild(listItem);
                                 });
                             } else {
                                 const listItem = document.createElement('li');
-                                listItem.textContent = 'Nenhuma postagem disponível.';
-                                postagensList.appendChild(listItem);
+                                listItem.textContent = 'Nenhuma dica disponível.';
+                                dicasList.appendChild(listItem);
                             }
                         })
                         .catch(error => {
-                            console.error('Erro ao obter postagens:', error);
+                            console.error('Erro ao obter dicas:', error);
                         });
                 }
-            
-                // Função para deletar um post
-                function deletarPost(postId) {
-                    fetch(`/deletarPost/${postId}`, { method: 'POST' })
+
+                // Função para deletar uma dica
+                function deletarDica(dicaId) {
+                    fetch(`/deletarPostDicas/${dicaId}`, { method: 'POST' })
                         .then(response => {
                             if (response.ok) {
-                                alert('Post deletado com sucesso!');
-                                carregarPostagens(); // Recarrega a lista de postagens
+                                alert('Dica deletada com sucesso!');
+                                carregarDicas(); // Recarrega a lista de dicas
                             } else {
-                                alert('Erro ao deletar o post');
+                                alert('Erro ao deletar a dica');
                             }
                         })
                         .catch(error => {
-                            console.error('Erro ao deletar o post:', error);
-                            alert('Erro ao deletar o post');
+                            console.error('Erro ao deletar a dica:', error);
+                            alert('Erro ao deletar a dica');
                         });
                 }
-            
-                // Carrega as postagens ao carregar a página
-                carregarPostagens();
-            </script>            
+
+                // Carrega as dicas ao carregar a página
+                carregarDicas();
+            </script>
         </div>
     </main>
 </body>

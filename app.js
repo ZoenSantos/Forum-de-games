@@ -22,7 +22,7 @@ app.use(session({
 }));
 
 // Iniciando o servidor
-const port = 3000;
+const port = 3001;
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
@@ -67,7 +67,7 @@ app.get('/login', (req, res) => {
 });
 
 
-// Rota para a página de cadastro
+// Renders de páginas com template engine
 app.get('/cadastro', (req, res) => {
     res.render('cadastro', { title: 'Cadastro' });
 });
@@ -88,8 +88,23 @@ app.get('/reviews', (req, res) => {
     res.render('reviews', { user: req.session.user });
 });
 
+app.get('/lerReview', (req, res) => {
+    res.render('lerReview', { user: req.session.user });
+});
+
+app.get('/lerDicas', (req, res) => {
+    res.render('lerDicas', { user: req.session.user });
+});
+
+
+app.get('/cadastrosucesso', (req, res) => {
+    res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
+});
+
+
+// Dashboard Admin
 app.get('/dashbordAdmin', isAuthenticated, (req, res) => {
-    // Certifique-se de que o usuário está autenticado e é um admin
+    // Verifica se o usuário está autenticado e é um admin
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Acesso negado!');
     }
@@ -101,39 +116,39 @@ app.get('/dashbordAdmin', isAuthenticated, (req, res) => {
             return res.status(500).send('Erro ao carregar o dashboard');
         }
 
-        // Certifique-se de que "results" está definido e contém os dados de usuários
         if (!results || results.length === 0) {
             console.warn('Nenhum usuário encontrado.');
         }
 
-        // Renderiza o dashboard passando a lista de usuários e o usuário atual
+        // Renderiza o dashboard com a lista de usuários
         res.render('dashbordAdmin', { user: req.session.user, users: results });
         console.log(results);
     });
 });
 
+// Dashboard do Usuário
 app.get('/dashbord', checkSession, isAuthenticated, (req, res) => {
     const userId = req.session.user.id;
 
-    // Consulta 1: Obter posts
+    // Consulta 1: Obter posts do usuário
     db.query('SELECT * FROM posts WHERE id = ?', [userId], (err, postResults) => {
         if (err) {
             console.error('Erro ao buscar os dados dos posts:', err);
             return res.status(500).send('Erro ao buscar os dados!');
         }
 
-        // Consulta 2: Obter imagem de perfil
+        // Consulta 2: Obter imagem de perfil do usuário
         db.query('SELECT profile_image FROM users WHERE id = ?', [userId], (err, profileResults) => {
             if (err) {
                 console.error('Erro ao buscar imagem de perfil:', err);
                 return res.status(500).send('Erro ao carregar o dashboard');
             }
 
-            // Lógica para imagem de perfil
+            // Lógica para definir imagem de perfil
             const profileImage = profileResults[0]?.profile_image || 'default-avatar.png';
             req.session.user.profile_image = profileImage;
 
-            // Lógica de redirecionamento
+            // Redirecionamento baseado na role do usuário
             if (req.session.user.role === 'admin') {
                 return res.redirect('/dashbordAdmin');
             } else if (req.session.user.role === 'usuario') {
@@ -150,18 +165,19 @@ app.get('/dashbord', checkSession, isAuthenticated, (req, res) => {
 });
 
 
-app.get('/post', /* checkSession, */(req, res) => {    // Verifica se o usuário está logado e se sua role é 'usuario' ou 'admin'
+app.get('/post', (req, res) => {
     if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
-        return res.status(403).send('Acesso negado! Faça o login primeiro');
+        // Redireciona para a página de erro personalizada
+        return res.status(403).render('erro', { title: 'Acesso Negado' });
     }
 
-    // Se a verificação passou, renderiza a página 'post'
-    res.render('post', { title: 'Tela para escrever as reviews' });
+    // Se o usuário está autenticado, renderiza a página de postagens
+    res.render('post', { title: 'Tela para escrever as reviews', user: req.session.user });
 });
 
 app.get('/postDicas', (req, res) => {
     if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
-        return res.status(403).send('Acesso negado! Faça o login primeiro');
+        return res.status(403).render('erro', { title: 'Acesso Negado' });
     }
 
     // Se a verificação passou, renderiza a página 'post'
@@ -185,18 +201,23 @@ app.get('/reviewEscritor', (req, res) => {
     });
 });
 
-app.get('/lerReview', (req, res) => {
-    res.render('lerReview', { user: req.session.user });
+app.get('/dicasAdmin', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado!');
+    }
+
+    // Consulta para buscar os usuários
+    db.query('SELECT id, nome, email, role FROM users', (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar usuários:', err);
+            return res.status(500).send('Erro ao carregar o dashboard');
+        }
+
+        // Renderiza a página apenas após a consulta ser concluída
+        res.render('dicasAdmin', { user: req.session.user, users: results });
+    });
 });
 
-app.get('/lerDicas', (req, res) => {
-    res.render('lerDicas', { user: req.session.user });
-});
-
-
-app.get('/cadastrosucesso', (req, res) => {
-    res.render('cadastrosucesso', { user: req.session.user }); // Renderiza o EJS cadastrosucesso.ejs
-});
 
 app.get('/profile', (req, res) => {
     const userId = req.session.user.id;
@@ -252,6 +273,104 @@ app.get('/admin/editar-usuario/:id', checkSession, (req, res) => {
     });
 });
 
+
+// Rota para exibir um post individual no lerReview.ejs
+app.get('/lerReview/:id', (req, res) => {
+    const { id } = req.params; // Pegando o ID do post na URL
+
+    const query = 'SELECT * FROM posts WHERE id = ?'; // Buscando o post pelo ID no banco de dados
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).send('Erro ao carregar o post!');
+            return;
+        }
+
+        if (result.length > 0) {
+            // Se o post for encontrado, renderizamos o template e passamos os dados do post
+            res.render('lerReview', { post: result[0] }); // Passa o post encontrado para o EJS
+        } else {
+            // Se o post não for encontrado, renderizamos o template com post = null
+            res.render('lerReview', { post: null });
+        }
+    });
+});
+
+app.get('/lerDicas/:idDicas', (req, res) => {
+    const { idDicas } = req.params; // Pegando o ID do post na URL
+
+    const query = 'SELECT * FROM postsDicas WHERE idDicas = ?'; // Buscando o post pelo ID no banco de dados
+    db.query(query, [idDicas], (err, result) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).send('Erro ao carregar o post!');
+            return;
+        }
+
+        if (result.length > 0) {
+            // Se o post for encontrado, renderizamos o template e passamos os dados do post
+            res.render('lerDicas', { post: result[0] }); // Passa o post encontrado para o EJS
+        } else {
+            // Se o post não for encontrado, renderizamos o template com post = null
+            res.render('lerDicas', { post: null });
+        }
+    });
+});
+
+// Rota para retornar todas as postagens em formato JSON
+// Rota API para buscar postagens
+app.get('/api/postagens', (req, res) => {
+    const query = 'SELECT id AS postId, titulo FROM posts';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar postagens:', err);
+            return res.status(500).json({ error: 'Erro ao buscar postagens' });
+        }
+        res.json(results);
+    });
+});
+
+
+// Rota para retornar todas as postagens em formato JSON
+app.get('/api/postagensDicas', (req, res) => {
+    const query = 'SELECT * FROM postsDicas';
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Erro ao consultar o MySQL:', err);
+            res.status(500).json({ error: 'Erro ao carregar as dicas!' });
+            return;
+        }
+
+        // Retorna as postagens como JSON
+        res.json(results);
+    });
+});
+
+app.get('/post', (req, res) => {
+    if (!req.session.user || (req.session.user.role !== 'usuario' && req.session.user.role !== 'admin')) {
+        // Redireciona para a página de erro personalizada
+        return res.status(403).render('erro', { title: 'Acesso Negado' });
+    }
+
+    // Se o usuário está autenticado, renderiza a página de postagens
+    res.render('post', { title: 'Tela para escrever as reviews', user: req.session.user });
+});
+
+
+
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////                          PARTIR DAQUI JA MUDA AS LINHAS DE CÓDIGO E O INTUITO DELAS.
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+
+
+
 // Configuração da conexão com o MySQL
 const db = mysql.createConnection({
     host: 'localhost',
@@ -291,7 +410,6 @@ app.post('/cadastro', (req, res) => {
         return res.render('cadastro', { error: "As senhas não coincidem!" });
     }
 
-
     // Inserindo os dados no banco de dados, incluindo o campo 'role'
     db.query(sql, [nome, email, telefone, senha], (err, results) => {
         if (err) {
@@ -314,7 +432,6 @@ app.post('/cadastro', (req, res) => {
                 return res.status(500).send('Erro no servidor');
             }
         }
-
         // Redireciona ou exibe uma mensagem de sucesso após o cadastro
         res.redirect('/cadastrosucesso');
     });
@@ -332,7 +449,6 @@ app.post('/login', async (req, res) => {
     // Query para verificar o login do usuário
     const query = 'SELECT * FROM users WHERE email = ? AND senha = ?';
     
-
     db.query(query, [email, senha], (err, results) => {
         if (err) {
             console.error('Erro ao consultar o MySQL:', err);
@@ -386,6 +502,24 @@ app.post('/deletarPost/:id', (req, res) => {
             console.error('Erro ao deletar post no MySQL:', err);
             return res.status(500).send('Erro ao deletar o post!');
         }
+        res.status(200).send('Post deletado com sucesso!'); // Responde com status 200 em caso de sucesso
+    });
+});
+
+// Rota para deletar um post pelo ID - Apenas para admin
+app.post('/deletarPostDicas/:id', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Acesso negado! Apenas administradores podem deletar posts.');
+    }
+
+    const postId = req.params.id;
+    const query = 'DELETE FROM postsDicas WHERE idDicas = ?';
+
+    db.query(query, [postId], (err, result) => {
+        if (err) {
+            console.error('Erro ao deletar post no MySQL:', err);
+            return res.status(500).send('Erro ao deletar o post!');
+        }
 
         res.status(200).send('Post deletado com sucesso!'); // Responde com status 200 em caso de sucesso
     });
@@ -430,81 +564,6 @@ app.delete('/admin/deletar-usuario/:id', (req, res) => {
     });
 });
 
-// Rota para exibir um post individual no lerReview.ejs
-app.get('/lerReview/:id', (req, res) => {
-    const { id } = req.params; // Pegando o ID do post na URL
-
-    const query = 'SELECT * FROM posts WHERE id = ?'; // Buscando o post pelo ID no banco de dados
-    db.query(query, [id], (err, result) => {
-        if (err) {
-            console.error('Erro ao consultar o MySQL:', err);
-            res.status(500).send('Erro ao carregar o post!');
-            return;
-        }
-
-        if (result.length > 0) {
-            // Se o post for encontrado, renderizamos o template e passamos os dados do post
-            res.render('lerReview', { post: result[0] }); // Passa o post encontrado para o EJS
-        } else {
-            // Se o post não for encontrado, renderizamos o template com post = null
-            res.render('lerReview', { post: null });
-        }
-    });
-});
-
-app.get('/lerDicas/:idDicas', (req, res) => {
-    const { idDicas } = req.params; // Pegando o ID do post na URL
-
-    const query = 'SELECT * FROM postsDicas WHERE idDicas = ?'; // Buscando o post pelo ID no banco de dados
-    db.query(query, [idDicas], (err, result) => {
-        if (err) {
-            console.error('Erro ao consultar o MySQL:', err);
-            res.status(500).send('Erro ao carregar o post!');
-            return;
-        }
-
-        if (result.length > 0) {
-            // Se o post for encontrado, renderizamos o template e passamos os dados do post
-            res.render('lerDicas', { post: result[0] }); // Passa o post encontrado para o EJS
-        } else {
-            // Se o post não for encontrado, renderizamos o template com post = null
-            res.render('lerDicas', { post: null });
-        }
-    });
-});
-
-// Rota para retornar todas as postagens em formato JSON
-app.get('/api/postagens', (req, res) => {
-    const query = 'SELECT * FROM posts';
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error('Erro ao consultar o MySQL:', err);
-            res.status(500).json({ error: 'Erro ao carregar as postagens!' });
-            return;
-        }
-
-        // Retorna as postagens como JSON
-        res.json(results);
-    });
-});
-
-// Rota para retornar todas as postagens em formato JSON
-app.get('/api/postagensDicas', (req, res) => {
-    const query = 'SELECT * FROM postsDicas';
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error('Erro ao consultar o MySQL:', err);
-            res.status(500).json({ error: 'Erro ao carregar as dicas!' });
-            return;
-        }
-
-        // Retorna as postagens como JSON
-        res.json(results);
-    });
-});
-
 // Rota para atualização de perfil
 app.post('/profile', upload.single('profileImage'), (req, res) => {
     const { username } = req.body;
@@ -545,18 +604,6 @@ app.post('/admin/editar-usuario', (req, res) => {
     });
 });
 
-app.post('/post', (req, res) => {
-    const { titulo, conteudo } = req.body;
-    const query = 'INSERT INTO posts (titulo, conteudo) VALUES (?, ?)';
-
-    db.query(query, [titulo, conteudo], (err, result) => {
-        if (err) {
-            console.error('Erro ao criar o post no MySQL:', err);
-            return res.status(500).send('Erro ao criar o post.');
-        }
-        res.redirect('/dashbord'); // Redireciona após a criação do post
-    });
-});
 
 app.post('/postDicas', (req, res) => {
     const { titulo, conteudo } = req.body;
@@ -571,6 +618,19 @@ app.post('/postDicas', (req, res) => {
     });
 });
 
+
+app.post('/post', (req, res) => {
+    const { titulo, conteudo } = req.body;
+    const query = 'INSERT INTO posts (titulo, conteudo) VALUES (?, ?)';
+
+    db.query(query, [titulo, conteudo], (err, result) => {
+        if (err) {
+            console.error('Erro ao criar o post no MySQL:', err);
+            return res.status(500).send('Erro ao criar o post.');
+        }
+        res.redirect('/dashbord'); // Redireciona após a criação do post
+    });
+});
 
 //Usando o middleware
 app.use(isAuthenticated);
